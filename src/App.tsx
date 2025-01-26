@@ -1,13 +1,19 @@
 import { useState, FC } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
+// import ArticleList from './components/ArticleList';
+// import ArticleDetails from './components/ArticleDetails';
+// import Login from './components/Login';
+// import ProtectedRoute from './components/ProtectedRoute';
+
 import './App.css'
 
 interface AppProps {
   title: string
-  initialCount?: number
+  initialCount?: number 
 }
-
+/* 
+ */
 const App: FC<AppProps> = ({ title, initialCount = 0 }) => {
   const [count, setCount] = useState<number>(initialCount)
 
@@ -15,10 +21,10 @@ const App: FC<AppProps> = ({ title, initialCount = 0 }) => {
     <>
       <div>
         <a href="https://vite.dev" target="_blank" rel="noreferrer">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
+          <img src='/vite.svg' className="logo" alt="Vite logo" />
         </a>
         <a href="https://react.dev" target="_blank" rel="noreferrer">
-          <img src={reactLogo} className="logo react" alt="React logo" />
+          <img src='./assets/react.svg' className="logo react" alt="React logo" />
         </a>
       </div>
       <h1>{title}</h1>
