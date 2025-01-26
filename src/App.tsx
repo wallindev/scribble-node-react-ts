@@ -1,10 +1,10 @@
 import { useState, FC } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-// import ArticleList from './components/ArticleList';
-// import ArticleDetails from './components/ArticleDetails';
-// import Login from './components/Login';
-// import ProtectedRoute from './components/ProtectedRoute';
+import ArticleList from './components/ArticleList';
+import ArticleDetails from './components/ArticleDetails';
+import Login from './components/Login';
+import ProtectedRoute from './components/ProtectedRoute';
 
 import './App.css'
 
@@ -12,8 +12,7 @@ interface AppProps {
   title: string
   initialCount?: number 
 }
-/* 
- */
+
 const App: FC<AppProps> = ({ title, initialCount = 0 }) => {
   const [count, setCount] = useState<number>(initialCount)
 
