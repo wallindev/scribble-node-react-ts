@@ -1,13 +1,14 @@
 import { useState, FC } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
-import './App.css'
+import GlobalStyles from './GlobalStyles'
 
 const App: FC = () => {
   const [count, setCount] = useState<number>(0)
 
   return (
     <>
+      <GlobalStyles />
       <div>
         <a href="https://vite.dev" target="_blank" rel="noreferrer">
           <img src={viteLogo} className="logo" alt="Vite logo" />
