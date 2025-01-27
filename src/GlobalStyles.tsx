@@ -25,19 +25,23 @@ const GlobalStyle = createGlobalStyle`
 
   body {
     font-family: Roboto, sans-serif;
-    margin: 0 auto;
+    margin: 0;
     padding: 2rem;
-    color: #333;
+    /* color: #333; */
     display: flex;
-    place-items: center;
+    /* place-items: center; */
     text-align: center;
     min-width: 320px;
     max-width: 1280px;
     min-height: 100vh;
   }
 
+  div#root {
+    margin: 0 auto;
+  }
+
   h1 {
-    font-size: 3.2em;
+    /* font-size: 3.2em; */
     line-height: 1.1;
   }
 
