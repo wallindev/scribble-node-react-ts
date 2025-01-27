@@ -1,5 +1,6 @@
-import { FC, useState, useEffect } from 'react';
-import axios from 'axios';
+import { FC, useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import axios from 'axios'
 
 interface Article {
   id: number;
@@ -10,11 +11,13 @@ interface Article {
 
 const Articles: FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);
+  const apiEndPoint = '/api/articles'
+  const apiEndPointMock = 'http://grungecorp.dev:8888/articles'
 
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const response = await axios.get('/api/articles', {
+        const response = await axios.get(apiEndPointMock, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`, // Include token in header
           },
@@ -34,7 +37,7 @@ const Articles: FC = () => {
         <div key={article.id}>
           <h3>{article.title}</h3>
           <p>{article.content}</p>
-          {/* Link to details page */}
+          <Link to={`/articles/${article.id}`}>{article.title}</Link>
         </div>
       ))}
     </div>
