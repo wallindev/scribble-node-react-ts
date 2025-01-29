@@ -9,7 +9,7 @@ const StartPage: FC = () => {
         Scribble! - a tiny web app where you can create and manage your articles.<br />
         Join our community and share your thoughts with the world!
       </p>
-      <div> {/* Container for the links */}
+      <div>
         <Link to="/login" style={{ marginRight: '20px' }}>Sign In</Link>
         <Link to="/register">Register</Link>
       </div>
