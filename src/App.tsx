@@ -35,6 +35,7 @@ const App: FC = () => {
           <Route path="/home" element={<Home />} />
           <Route path="/articles" element={<Articles />} />
           <Route path="/articles/:id" element={<Article />} />
+          <Route path="/articles/new" element={<Article />} />
         {/* </Route> */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
