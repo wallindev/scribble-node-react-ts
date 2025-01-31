@@ -2,12 +2,8 @@ import { FC, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 
-interface Article {
-  id: number;
-  title: string;
-  content: string;
-  // ... other properties
-}
+import LinkButton from './shared/LinkButton'
+import type { Article } from '../types/article.types'
 
 const Articles: FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -19,7 +15,7 @@ const Articles: FC = () => {
       try {
         const response = await axios.get(apiEndPointMock, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`, // Include token in header
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         });
         setArticles(response.data);
@@ -33,11 +29,13 @@ const Articles: FC = () => {
 
   return (
     <div>
+      <LinkButton to='/articles/new'>New Article &raquo;</LinkButton>
       {articles.map((article) => (
         <div key={article.id}>
-          <h3>{article.title}</h3>
-          <p>{article.content}</p>
-          <Link to={`/articles/${article.id}`}>{article.title}</Link>
+          <Link to={`/articles/${article.id}`}>
+            <h3>{article.title}</h3>
+            <p>{article.content}</p>
+          </Link>
         </div>
       ))}
     </div>
