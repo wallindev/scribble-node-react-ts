@@ -2,8 +2,6 @@ import { createGlobalStyle } from 'styled-components';
 import 'normalize.css';
 
 const GlobalStyle = createGlobalStyle`
-  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-
   :root {
     --primary-color: #007bff;
     --secondary-color: #6c757d;
