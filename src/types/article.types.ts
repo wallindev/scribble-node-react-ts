@@ -1,8 +1,7 @@
 export interface Article {
-  id: number
+  id?: number | string
   title: string
   content: string
   created: string
   modified: string
-  author: number
 }
