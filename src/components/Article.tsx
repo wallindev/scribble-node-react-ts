@@ -1,5 +1,5 @@
 import { FC, useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 
 import type { Article } from '../types/article.types'
@@ -7,6 +7,7 @@ import LinkButton from './shared/LinkButton';
 import FormButton from './shared/FormButton';
 
 const Article: FC = () => {
+  const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   console.log('id: ', id)
   const articleId = id || null
@@ -66,7 +67,7 @@ const Article: FC = () => {
     try {
       const response = await axios.post(apiEndPointMock, article)
       setArticle(response.data)
-      location.href = '/articles'
+      navigate('/articles')
       // return response.data
     } catch (error) {
       console.error('Error storing article:', error)
