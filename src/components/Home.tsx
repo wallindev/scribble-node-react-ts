@@ -1,5 +1,7 @@
 import { FC } from 'react'
 import { Link } from 'react-router-dom'
+import { isAuthenticated } from '../App';
+import Logout from './shared/Logout';
 
 const StartPage: FC = () => {
   return (
@@ -13,6 +15,8 @@ const StartPage: FC = () => {
         <Link to="/articles" style={{ marginRight: '20px' }}>Articles</Link>
         <Link to="/profile">Profile</Link>
       </div>
+
+      {isAuthenticated() && <div><br /><Logout /></div>}
     </div>
   );
 }
