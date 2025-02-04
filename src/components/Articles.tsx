@@ -8,7 +8,7 @@ import type { Article } from '../types/article.types'
 const Articles: FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const apiEndPoint = '/api/articles'
-  const apiEndPointMock = 'http://grungecorp.dev:8888/articles'
+  const apiEndPointMock = 'http://grungecorp.dev:8000/articles'
 
   useEffect(() => {
     const fetchArticles = async () => {

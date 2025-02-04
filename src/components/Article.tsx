@@ -23,7 +23,7 @@ const Article: FC = () => {
 
   let apiEndPoint = '/api/articles'
   if (articleId) apiEndPoint = `${apiEndPoint}/${articleId}`
-  let apiEndPointMock = 'http://grungecorp.dev:8888/articles'
+  let apiEndPointMock = 'http://grungecorp.dev:8000/articles'
   if (articleId) apiEndPointMock = `${apiEndPointMock}/${articleId}`
 
   useEffect(() => {
