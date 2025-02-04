@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { Link } from 'react-router-dom'
-import { isAuthenticated } from '../App';
-import Logout from './shared/Logout';
+import Logout from './shared/Logout'
+import { isAuthenticated } from '../functions'
 
 const StartPage: FC = () => {
   return (
@@ -18,7 +18,7 @@ const StartPage: FC = () => {
 
       {isAuthenticated() && <div><br /><Logout /></div>}
     </div>
-  );
+  )
 }
 
 export default StartPage
