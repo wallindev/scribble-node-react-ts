@@ -1,10 +1,13 @@
-import { FC } from 'react'
+import { FC, JSX } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
 
-const ProtectedRoute: FC = () => {
-  const isAuthenticated = !!localStorage.getItem('token'); // Check if a token exists
+import { isAuthenticated } from '../functions';
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" />;
-};
+const ProtectedRoute: FC = (): JSX.Element => {
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" />;
+  }
+  return <Outlet />;
+}
 
 export default ProtectedRoute
