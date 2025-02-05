@@ -6,7 +6,7 @@ const Logout: FC = () => {  // Explicitly typed as a functional component
 
   const handleLogout = (event: MouseEvent<HTMLButtonElement>) => { // Type for event handler
     event.preventDefault() // Prevent default form submission behavior (if wrapped in a form)
-    localStorage.removeItem('AUTHENTICATED')
+    localStorage.removeItem('isAuthenticated')
     navigate('/')
   }
 
