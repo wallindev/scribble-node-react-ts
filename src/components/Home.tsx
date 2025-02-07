@@ -2,10 +2,12 @@ import { FC } from 'react'
 import { Link } from 'react-router-dom'
 import Logout from './shared/Logout'
 import { isAuthenticated } from '../functions'
+import HomeNav from './shared/HomeNav'
 
 const StartPage: FC = () => {
   return (
     <div>
+      <HomeNav />
       <h1>Welcome to Your Home Page!</h1>
       <p>
         Here you can manage your <Link to="/articles">Articles</Link> and your <Link to="/profile">Profile</Link>.<br />
