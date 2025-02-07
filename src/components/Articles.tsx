@@ -4,6 +4,7 @@ import axios from 'axios'
 
 import LinkButton from './shared/LinkButton'
 import type { Article } from '../types/article.types'
+import HomeNav from './shared/HomeNav'
 
 const Articles: FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -29,6 +30,7 @@ const Articles: FC = () => {
 
   return (
     <div>
+      <HomeNav />
       <LinkButton to='/articles/new'>New Article &raquo;</LinkButton>
       {articles.map((article) => (
         <div key={article.id}>
