@@ -1,0 +1,122 @@
+@import 'tailwindcss';
+
+@font-face {
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url(/fonts/Roboto-VariableFont_wdth,wght.ttf) format('truetype');
+}
+
+@theme {
+  --font-sans: Roboto, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  /* --default-font-family: var(--font-sans); */ /* This is set automatically by Tailwind */
+
+  /* Colors in blue/gray nuances */
+  --color-primary: #2563eb;
+  --color-secondary: #64748b;
+  --color-accent: #94a3b8;
+
+  --color-link: #241d00;
+  --color-line: #ebe9e0;
+  --color-tag: #e7e5da;
+
+  --primary-blue: #1e90ff;
+  --medium-dark-gray: #333333;
+  --dark-gray: #1a1a1a;
+  --darker-gray: #212121;
+  --darkest-gray: #0f0f0f;
+
+  /* Dark theme base colors */
+  --color-page-bg: #0f0f0f;
+  --color-page-bg_old: #18181a;
+  --color-content-bg: #1a1a1a;
+  --color-content-bg_old: #242424;
+  --color-main-content-bg: #242424;
+  --color-main-content-bg_old: #212121;
+  --color-input-bg: #f0f0f0;
+  --color-input-text: #0f0f0f;
+  --color-button-bg: #007bff;
+  --color-button-bg--hover: #0056b3;
+  --color-button-outline: #007bff;
+  --color-button-text: #f0f0f0;
+  --color-text: #ffffffde;
+  --color-text-rgba: rgba(255, 255, 255, 0.87);
+}
+
+@layer base {
+  @media (max-width: 639px) {
+    .nav-large {
+        display: none !important;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .hamburger {
+      display: none !important;
+    }
+    .nav-closed{
+      display: none !important;
+    }
+    .nav-large{
+      display: block !important;
+    }
+    .nav-open{
+      display: none !important;
+    }
+  }
+}
+
+/**
+* Tailwinds CSS Media Queries / Breakpoints
+*
+sm = 40rem = 640px
+md = 48rem = 768px
+lg = 64rem = 1024px
+xl = 80rem = 1280px
+2xl = 96rem = 1536px
+
+sm	@media (width >= 40rem)
+md	@media (width >= 48rem)
+lg	@media (width >= 64rem)
+xl	@media (width >= 80rem)
+2xl	@media (width >= 96rem)
+min-[...]	@media (width >= ...)
+
+max-sm	@media (width < 40rem)
+max-md	@media (width < 48rem)
+max-lg	@media (width < 64rem)
+max-xl	@media (width < 80rem)
+max-2xl	@media (width < 96rem)
+max-[...]	@media (width < ...)
+
+@3xs	@container (width >= 16rem)
+@2xs	@container (width >= 18rem)
+@xs	@container (width >= 20rem)
+@sm	@container (width >= 24rem)
+@md	@container (width >= 28rem)
+@lg	@container (width >= 32rem)
+@xl	@container (width >= 36rem)
+@2xl	@container (width >= 42rem)
+@3xl	@container (width >= 48rem)
+@4xl	@container (width >= 56rem)
+@5xl	@container (width >= 64rem)
+@6xl	@container (width >= 72rem)
+@7xl	@container (width >= 80rem)
+@min-[...]	@container (width >= ...)
+
+@max-3xs	@container (width < 16rem)
+@max-2xs	@container (width < 18rem)
+@max-xs	@container (width < 20rem)
+@max-sm	@container (width < 24rem)
+@max-md	@container (width < 28rem)
+@max-lg	@container (width < 32rem)
+@max-xl	@container (width < 36rem)
+@max-2xl	@container (width < 42rem)
+@max-3xl	@container (width < 48rem)
+@max-4xl	@container (width < 56rem)
+@max-5xl	@container (width < 64rem)
+@max-6xl	@container (width < 72rem)
+@max-7xl	@container (width < 80rem)
+@max-[...]	@container (width < ...)
+*/
