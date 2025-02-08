@@ -11,7 +11,7 @@ import FlashMessage from './shared/FlashMessage'
 import type { IArticle } from '../types/article.types'
 import { localDateStr } from '../functions'
 
-import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect'
+// import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect'
 
 const Article: FC = (): JSX.Element => {
   const navigate = useNavigate()
@@ -140,18 +140,11 @@ const Article: FC = (): JSX.Element => {
               onDismiss={dismissFlashMessage}
             />
           )}
-          <h2>
-            isBrowser: {isBrowser.toString()}<br />
-            isMobile: {isMobile.toString()}
-          </h2>
-          <BrowserView>This is a BrowserView</BrowserView>
-          <MobileView>This is a MobileView</MobileView>
           <h2 className="text-2xl mb-4">{article?.title}</h2>
-          <div>{article?.content}</div>
-          <div>
-            <small>
-              Created: {localDateStr(article?.created)} | Modified: {localDateStr(article?.modified)}
-            </small>
+          <div className="mt-2 mb-4 p-4" style={{ boxShadow: 'inset 2px 2px 5px rgba(0, 0, 0, 0.3)' }}>{article?.content}</div>
+          <div className="flex justify-between items-center text-xs">
+            <div>Created: {localDateStr(article?.created)}</div>
+            <div>Modified: {localDateStr(article?.modified)}</div>
           </div>
           <CustomButton onClick={() => navigate('/articles')} className="mr-4">&laquo; All Articles</CustomButton>
           <CustomButton onClick={() => navigate('?edit')}>Edit</CustomButton>
@@ -185,7 +178,7 @@ const Article: FC = (): JSX.Element => {
                 id="content"
                 name="content"
                 value={article?.content}
-                className="p-1 bg-input-bg text-input-text w-full sm:w-4/5 border-0 outline-0 rounded-sm"
+                className="p-1 bg-input-bg text-input-text w-full sm:w-4/5 border-0 outline-0 rounded-sm overflow-hidden"
                 onChange={(e: ChangeEvent): void => setArticle({...article, content: (e.currentTarget as HTMLInputElement).value})}
               />
             </div>
