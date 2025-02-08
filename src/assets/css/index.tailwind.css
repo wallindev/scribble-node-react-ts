@@ -45,6 +45,87 @@
 }
 
 @layer base {
+
+  [data-theme='red'] {
+    --color-primary: aaa;
+    --color-secondary: aaa;
+    --color-tertiary: aaa;
+    --color-quaternary: aaa;
+    --color-quinary: aaa;
+  }
+
+  [data-theme='orange'] {
+    --color-primary: aaa;
+    --color-secondary: aaa;
+    --color-tertiary: aaa;
+    --color-quaternary: aaa;
+    --color-quinary: aaa;
+  }
+
+  [data-theme='yellow'] {
+    --color-primary: aaa;
+    --color-secondary: aaa;
+    --color-tertiary: aaa;
+    --color-quaternary: aaa;
+    --color-quinary: aaa;
+  }
+
+  [data-theme='green'] {
+    --color-primary: aaa;
+    --color-secondary: aaa;
+    --color-tertiary: aaa;
+    --color-quaternary: aaa;
+    --color-quinary: aaa;
+  }
+
+  [data-theme='blue'] {
+    --color-primary: aaa;
+    --color-secondary: aaa;
+    --color-tertiary: aaa;
+    --color-quaternary: aaa;
+    --color-quinary: aaa;
+  }
+
+  [data-theme='indigo'] {
+    --color-primary: aaa;
+    --color-secondary: aaa;
+    --color-tertiary: aaa;
+    --color-quaternary: aaa;
+    --color-quinary: aaa;
+  }
+
+  [data-theme='violet'] {
+    --color-primary: aaa;
+    --color-secondary: aaa;
+    --color-tertiary: aaa;
+    --color-quaternary: aaa;
+    --color-quinary: aaa;
+  }
+
+  [data-theme='pink'] {
+    --color-primary: aaa;
+    --color-secondary: aaa;
+    --color-tertiary: aaa;
+    --color-quaternary: aaa;
+    --color-quinary: aaa;
+  }
+
+  [data-theme='purple'] {
+    --color-primary: aaa;
+    --color-secondary: aaa;
+    --color-tertiary: aaa;
+    --color-quaternary: aaa;
+    --color-quinary: aaa;
+  }
+
+  [data-theme='gray'] {
+    --color-primary: aaa;
+    --color-secondary: aaa;
+    --color-tertiary: aaa;
+    --color-quaternary: aaa;
+    --color-quinary: aaa;
+  }
+
   @media (max-width: 639px) {
     .nav-large {
         display: none !important;
