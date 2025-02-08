@@ -1,47 +1,58 @@
-import { FC, useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import type { FC, JSX } from 'react'
+import type { AxiosResponse } from 'axios'
+import Layout from './layout/Layout'
+import CustomButton from './shared/CustomButton'
+import TextLink from './shared/TextLink'
+import LoadText from './shared/LoadText'
+import type { IArticle } from '../types/article.types'
 
-import LinkButton from './shared/LinkButton'
-import type { Article } from '../types/article.types'
-import HomeNav from './shared/HomeNav'
-
-const Articles: FC = () => {
-  const [articles, setArticles] = useState<Article[]>([]);
-  const apiEndPoint = '/api/articles'
-  const apiEndPointMock = 'http://grungecorp.dev:8000/articles'
+const Articles: FC = (): JSX.Element => {
+  const navigate = useNavigate()
+  const [articles, setArticles] = useState<IArticle[]>([])
+  const [loading, setLoading] = useState(true)
+  // const apiEndPoint = '/api/articles'
+  const apiEndPointMock = 'http://192.168.32.2:8000/articles'
 
   useEffect(() => {
-    const fetchArticles = async () => {
+    /* const fetchArticles =  */(async (): Promise<void> => {
+      // setLoading(true)
       try {
-        const response = await axios.get(apiEndPointMock, {
+        const response: AxiosResponse = await axios.get(apiEndPointMock/* , {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
-        });
-        setArticles(response.data);
+        } */)
+        setArticles(response.data)
       } catch (error) {
-        console.error('Error fetching articles:', error);
+        console.error('Error fetching articles:', error)
+      } finally {
+        setLoading(false)
       }
-    };
+    })()
 
-    fetchArticles();
-  }, []);
+    // Simulate throttling (to be able to see the LoadText component)
+    // setTimeout(() => {
+    //   fetchArticles()
+    // }, 5000)
+  }, [])
 
-  return (
-    <div>
-      <HomeNav />
-      <LinkButton to='/articles/new'>New Article &raquo;</LinkButton>
-      {articles.map((article) => (
-        <div key={article.id}>
-          <Link to={`/articles/${article.id}`}>
-            <h3>{article.title}</h3>
-            <p>{article.content}</p>
-          </Link>
+  return/*  loading ? <LoadText loading={loading} /> : */ (
+    <Layout>
+      <div className="m-2">
+        <CustomButton onClick={() => navigate('/articles/new')}>New Article &raquo;</CustomButton>
+        <div className="my-2">
+          {articles.map((article) => (
+            <div key={article.id} className="my-1">
+                <TextLink to={`/articles/${article.id}`} className="text-lg">{article.title}</TextLink>
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
-  );
-};
+      </div>
+    </Layout>
+  )
+}
 
 export default Articles
