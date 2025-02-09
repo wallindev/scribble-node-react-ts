@@ -1,32 +1,40 @@
 {
   "articles": [
     {
-      "id": "1aa2",
-      "title": "Article 1",
-      "content": "This is the content of Article 1",
-      "created": "2025-02-24 05:30:41",
-      "modified": "2025-02-24 22:23:12"
+      "id": "1",
+      "title": "Test",
+      "content": "Testar",
+      "created": "2025-03-15 01:32:23",
+      "modified": "2025-03-15 01:32:23",
+      "userId": "1"
     },
     {
-      "id": "2ab3",
-      "title": "Article 2",
-      "content": "This is the content of Article 2",
-      "created": "2025-02-24 06:30:41",
-      "modified": "2025-02-24 05:41:21"
+      "id": "2",
+      "title": "Test 2",
+      "content": "Testar 2",
+      "created": "2025-03-15 01:52:51",
+      "modified": "2025-03-15 01:52:51",
+      "userId": "1"
     },
     {
-      "id": "3bb4",
-      "title": "Article 3",
-      "content": "Article 3 Content",
-      "created": "2025-02-24 21:47:31",
-      "modified": "2025-02-24 21:47:31"
-    },
+      "id": "3",
+      "title": "Test 3",
+      "content": "Testar 3",
+      "created": "2025-03-15 02:52:51",
+      "modified": "2025-03-15 03:52:51",
+      "userId": "1"
+    }
+  ],
+  "users": [
     {
-      "id": "d5bf",
-      "title": "Article 4",
-      "content": "Article 4 Content",
-      "created": "2025-02-24 22:25:01",
-      "modified": "2025-02-24 22:25:01"
+      "id": "1",
+      "firstname": "Mikael",
+      "lastname": "Wallin",
+      "email": "mikael.wallin@yahoo.se",
+      "password": "ldkfgjhalkjgelgjfdhlgkjfhglkjfh",
+      "salt": "argaegre",
+      "created": "2025-03-15 02:32:23",
+      "modified": "2025-03-15 02:32:23"
     }
   ]
 }
