@@ -1,8 +1,6 @@
-import { FC } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-
-import GlobalStyle from './GlobalStyle'
-
+import { useState, useEffect } from 'react'
+import type { FC, JSX } from 'react'
 import StartPage from './components/StartPage'
 import Login from './components/Login'
 import Register from './components/Register'
@@ -10,19 +8,38 @@ import Home from './components/Home'
 import Articles from './components/Articles'
 import Article from './components/Article'
 import ProtectedRoute from './components/ProtectedRoute'
+import { Theme } from './types/general.types'
+import './utils/config'
 
-const App: FC = () => {
+const App: FC = (): JSX.Element => {
+  const [theme, setTheme] = useState<Theme>(Theme.Default)
+  const [loading, setLoading] = useState<boolean>(false)
+
+  // Check if user stored theme before
+  useEffect(() => {
+    const storedTheme = localStorage.getItem('theme')
+    storedTheme && setTheme(parseInt(storedTheme, 10))
+  }, [])
+
+  const globalProps = {
+    theme,
+    setTheme,
+    loading,
+    setLoading,
+  }
+
   return (
     <Router>
-      <GlobalStyle />
       <Routes>
-        <Route path="/" element={<StartPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/" element={<StartPage {...globalProps} />} />
+        <Route path="/login" element={<Login {...globalProps} />} />
+        <Route path="/register" element={<Register {...globalProps} />} />
         <Route element={<ProtectedRoute />}>
-          <Route path="/home" element={<Home />} />
-          <Route path="/articles" element={<Articles />} />
-          <Route path="/articles/:id" element={<Article />} />
+          <Route path="/home" element={<Home {...globalProps} />} />
+          <Route path="/articles" element={<Articles {...globalProps} />} />
+          <Route path="/articles/new" element={<Article {...globalProps} />} />
+          <Route path="/articles/:id" element={<Article {...globalProps} />} />
+          <Route path="/articles/:id?edit" element={<Article {...globalProps} />} />
         </Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
