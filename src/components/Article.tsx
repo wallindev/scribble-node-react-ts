@@ -1,122 +1,132 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import axios from 'axios'
-import type { FC, JSX, ChangeEvent, FormEvent } from 'react'
-import type { AxiosResponse } from 'axios'
+import axios/* , { AxiosError } */ from 'axios'
+import type { KeyboardEvent, FocusEvent, FC, JSX } from 'react'
+import type { Axios, AxiosError, AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
-import TextInput from './shared/TextInput'
 import CustomButton from './shared/CustomButton'
-import LoadText from './shared/LoadText'
 import FlashMessage from './shared/FlashMessage'
-import type { IArticle } from '../types/article.types'
-import { replaceNewlinesWithBr } from '../functions'
-import { localDateStr } from '../functions'
+import { Mode } from '../types/general.types'
+import type { IGlobal, Mode as TMode, TFlashMessage, TArticle } from '../types/general.types'
+import { dismissFlashMessage, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
+import { defaultArticle, defaultFlashMessage } from '../utils/defaults'
 
 // import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect'
 
-const Article: FC = (): JSX.Element => {
-  const navigate = useNavigate()
+const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Element => {
   const params = useParams<{ id: string }>()
-  // const articleId = params.id || null
   const [searchParams, setSearchParams] = useSearchParams()
-  const [article, setArticle] = useState<IArticle>({
-    id: params.id || null,
-    title: '',
-    content: '',
-    created: null,
-    modified: ''
-  })
-  const [loading, setLoading] = useState(article.id ? true : false)
-  const [flashMessage, setFlashMessage] = useState<{
-    message: string
-    type: 'success' | 'error' | 'warning' | 'info'
-    visible: boolean
-  }>({ message: '', type: 'success', visible: false })
-  const enum Mode {
-    Show,
-    Edit,
-    New
-  }
-  const [articleMode, setArticleMode] = useState(searchParams.has('edit') ? Mode.Edit : article.id ? Mode.Show : Mode.New)
-
-  // let apiEndPoint = '/api/articles'
-  // if (article.id) apiEndPoint = `${apiEndPoint}/${article.id}`
-  let apiEndPointMock = 'http://192.168.32.2:8000/articles'
-  if (article.id) apiEndPointMock = `${apiEndPointMock}/${article.id}`
+  const navigate = useNavigate()
+  const [article, setArticle] = useState<TArticle>(defaultArticle)
+  const [flashMessage, setFlashMessage] = useState<TFlashMessage>(defaultFlashMessage)
+  const [articleMode, setArticleMode] = useState<TMode>(Mode.Show)
+  const divTitleRef = useRef<HTMLDivElement>(null)
+  const divContentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setArticleMode(searchParams.has('edit') ? Mode.Edit : article.id ? Mode.Show : Mode.New)
-    if (article.id) {
-      /* const fetchArticle =  */(async () => {
-        setLoading(true)
-        try {
-          const response: AxiosResponse = await axios.get(apiEndPointMock/* , {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
-            },
-          } */)
-          setArticle(response.data)
-        } catch (error) {
-          console.error('Error fetching article:', error)
-          setFlashMessage({
-            message: `Error fetching article:<br />${error}`,
-            type: 'error',
-            visible: true,
-          })
-        } finally {
-          setLoading(false)
-        }
-      })()
+    console.log('useEffect without dep')
+    // console.log('Re-render occured')
+    // console.log('articleMode:', Mode[articleMode])
+    articleMode === Mode.New && setPlaceholderTexts()
+  })
 
-      // Simulate throttling (to be able to see the LoadText component)
-      // setTimeout(() => {
-        // fetchArticle()
-      // }, 10000)
+  useEffect(() => {
+    console.log('useEffect with empty dep')
+  }, [])
+
+  // useEffect(() => {
+  //   console.log('location.key changed:')
+  //   console.log(location.key)
+  // }, [location.key])
+
+  // useEffect(() => {
+  //   console.log('params.id changed:')
+  //   console.log(params.id)
+  // }, [params.id])
+
+  // useEffect(() => {
+  //   console.log("searchParams.has('edit') changed:")
+  //   console.log(searchParams.has('edit'))
+  // }, [searchParams.has('edit')])
+
+  useEffect(() => {
+    setArticleMode(searchParams.has('edit') ? Mode.Edit : params.id ? Mode.Show : Mode.New)
+    if (params.id) {
+      if (!Number.isInteger(Number(params.id))) {
+        setFlashMessage({
+          message: 'Invalid article ID',
+          type: 'error',
+          visible: true,
+        })
+      } else {
+        !(async () => {
+          setLoading!(true)
+          try {
+            const response: AxiosResponse = await axios.get(`/articles/${params.id}`/* , {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+            } */)
+            console.log('response.status:', response.status)
+            if (response.status === 200 && response.data) {
+              setArticle(response.data)
+            }
+          } catch (error) {
+            if (axios.isAxiosError(error))  {
+              const axiosError = error as AxiosError
+              console.log('axiosError.status:', axiosError.status)
+              switch (axiosError.status) {
+                case 404:
+                  console.error('Error 404: Article does not exist')
+                  setFlashMessage({
+                    message: 'Article does not exist',
+                    type: 'error',
+                    visible: true,
+                  })
+                  break
+                default:
+                  console.error('A generic error occured.')
+                  setFlashMessage({
+                    message: 'Something unexpected happened.',
+                    type: 'error',
+                    visible: true,
+                  })
+              }
+            } else {
+              console.error("Error fetching article:\n", error)
+              setFlashMessage({
+                message: `Error fetching article:<br />${error}`,
+                type: 'error',
+                visible: true,
+              })
+            }
+          } finally {
+            // To mock slow network
+            // setTimeout(() => {
+              setLoading!(false)
+            // }, 5000)
+          }
+        })()
+      }
     }
-  }, [article.id, searchParams])
-
-  const dismissFlashMessage = () => {
-    setFlashMessage({ ...flashMessage, visible: false })
-  }
+    // TODO: searchParams.get or searchParams.has or something else?
+  }, [params.id, searchParams.get('edit')])
 
   const saveArticle = (): void => {
-    const articleData: IArticle = {
-      title: (document.getElementById('title') as HTMLDivElement).innerText,
-      content: (document.getElementById('content') as HTMLDivElement).innerText,
-      created: articleMode === Mode.Edit ? null : localDateStr(),
+    const articleData: TArticle = {
+      title: (divTitleRef.current as HTMLDivElement).innerText,
+      content: (divContentRef.current as HTMLDivElement).innerText,
+      created: articleMode === Mode.Edit ? undefined : localDateStr(),
       modified: localDateStr(),
     }
     // console.log('articleData: ', articleData)
     articleMode === Mode.Edit ? updateArticle(articleData) : storeArticle(articleData)
   }
 
-  // Update existing Article (PATCH). Partial<Article> because of the PATCH partial update.
-  const updateArticle = async (artcl: Partial<IArticle>) => {
-    try {
-      const response = await axios.patch(apiEndPointMock, artcl)
-      setArticle(response.data)
-    } catch (error) {
-      console.error('Error updating article:', error)
-      setFlashMessage({
-        message: `Error updating article:<br />${error}`,
-        type: 'error',
-        visible: true,
-      })
-    } finally {
-      setFlashMessage({
-        message: 'Article updated successfully',
-        type: 'success',
-        visible: true,
-      })
-      // Remove querystring, so '/articles/:id?edit' becomes '/articles/:id'
-      setSearchParams()
-    }
-  }
-
   // Store new Article (POST)
-  const storeArticle = async (artcl: IArticle): Promise<void> => {
+  const storeArticle = async (artcl: TArticle): Promise<void> => {
     try {
-      const response = await axios.post(apiEndPointMock, artcl)
+      const response: AxiosResponse = await axios.post('/articles', artcl)
       setArticle(response.data)
       navigate(`/articles/${response.data.id}`)
     } catch (error) {
@@ -132,76 +142,89 @@ const Article: FC = (): JSX.Element => {
         type: 'success',
         visible: true,
       })
-      // setTimeout(() => {
-      // }, 3000)
+      // TODO: is this needed?
+      // Change mode to Show
+      // setArticleMode(Mode.Show)
     }
   }
 
-  return loading ? <LoadText /> : (
-    <Layout>
+  // Update existing Article (PATCH). Partial<Article> because of the PATCH partial update.
+  const updateArticle = async (artcl: Partial<TArticle>) => {
+    try {
+      console.log('params.id:', params.id)
+      const response: AxiosResponse = await axios.patch(`/articles/${params.id}`, artcl)
+      console.log('response.data:', response.data)
+      setArticle(response.data)
+    } catch (error) {
+      console.error('Error updating article:', error)
+      setFlashMessage({
+        message: `Error updating article:<br />${error}`,
+        type: 'error',
+        visible: true,
+      })
+    } finally {
+      setFlashMessage({
+        message: 'Article updated successfully',
+        type: 'success',
+        visible: true,
+      })
+      // Remove querystring, so '/articles/:id?edit' becomes '/articles/:id'
+      setSearchParams('', {preventScrollReset: true})
+    }
+  }
+
+  const setPlaceholderTexts = (): void => {
+    if (divTitleRef.current && divContentRef.current) {
+      setElementText(divTitleRef.current, '[Title here]')
+      setElementText(divContentRef.current, '[Content here]')
+      selectElementText(divTitleRef.current, '[Title here]')
+    }
+  }
+
+  return (
+    <Layout loading={loading} theme={theme} setTheme={setTheme}>
       <div>
         {flashMessage.visible && (
           <FlashMessage
             message={flashMessage.message}
             type={flashMessage.type}
-            onDismiss={dismissFlashMessage}
+            onDismiss={() => dismissFlashMessage(flashMessage, setFlashMessage)}
           />
         )}
-        <h3 className="text-xl mb-4">{articleMode === Mode.Edit ? 'Edit' : 'New'} Article</h3>
-        <h2
-          id="title"
-          className={`text-2xl mb-4 p-4${articleMode !== Mode.Show && ' inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)]'}`}
-          dangerouslySetInnerHTML={{ __html: replaceNewlinesWithBr(article.title) }}
-          contentEditable={articleMode !== Mode.Show ? true : false}
-        />
-        <div
-          id="content"
-          className={`mt-2 mb-4 p-4${articleMode !== Mode.Show && ' inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)]'}`}
-          dangerouslySetInnerHTML={{ __html: replaceNewlinesWithBr(article.content) }}
-          contentEditable={articleMode !== Mode.Show ? true : false}
-        />
-        <div className="flex justify-between items-center mb-4 text-xs">
-          <div>Created: {localDateStr(article.created)}</div>
-          <div>Modified: {localDateStr(article.modified)}</div>
-        </div>
-        {articleMode === Mode.Show ? (
-          <>
-            <CustomButton onClick={() => navigate('/articles')} className="mr-4">&laquo; All Articles</CustomButton>
-            <CustomButton onClick={() => navigate('?edit')}>Edit</CustomButton>
-          </>
-        ) : (
-          <>
-            <CustomButton type="button" onClick={() => articleMode === Mode.Edit ? setSearchParams() : navigate('/articles')}>&laquo; Cancel</CustomButton>
-            <CustomButton type="submit" onClick={saveArticle} className="ml-4">{articleMode === Mode.Edit ? 'Update' : 'Save'}</CustomButton>
-          </>
-        )}
+        {article.title && article.content ? <>
+          {articleMode !== Mode.Show && <h3 className="text-xl mb-4">{articleMode === Mode.Edit ? 'Edit' : 'New'} Article</h3>}
+          <div
+            ref={divTitleRef}
+            className={`${articleMode !== Mode.Show ? ' inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 ' : ''}block text-2xl mb-4`}
+            dangerouslySetInnerHTML={{ __html: replaceNewlinesWithBr(article.title) }}
+            contentEditable={articleMode !== Mode.Show ? true : false}
+            onFocus={(e: FocusEvent<HTMLDivElement>) => {articleMode === Mode.New ? selectElementText(e.target, '[Title here]') : undefined}}
+            onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => e.code.toUpperCase() === 'ENTER' && e.preventDefault()}
+          />
+          <div
+            ref={divContentRef}
+            className={`${articleMode !== Mode.Show ? ' inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 ' : ''}min-h-32 block mt-2 mb-4`}
+            dangerouslySetInnerHTML={{ __html: replaceNewlinesWithBr(article.content) }}
+            contentEditable={articleMode !== Mode.Show ? true : false}
+            onFocus={(e: FocusEvent<HTMLDivElement>) => {articleMode === Mode.New ? selectElementText(e.target, '[Content here]') : undefined}}
+          />
+          <div className="flex justify-between items-center mb-4 text-xs">
+            <div>Created: {localDateStr(article.created)}</div>
+            <div>Modified: {localDateStr(article.modified)}</div>
+          </div>
+          {articleMode === Mode.Show ? (
+            <>
+              <CustomButton onClick={() => navigate('/articles')} className="mr-4">&laquo; All Articles</CustomButton>
+              <CustomButton onClick={() => navigate('?edit')}>Edit</CustomButton>
+            </>
+          ) : (
+            <>
+              <CustomButton type="button" onClick={() => articleMode === Mode.Edit ? navigate(`/articles/${params.id}`) : navigate('/articles')}>&laquo; Cancel</CustomButton>
+              <CustomButton type="submit" onClick={saveArticle} className="ml-4">{articleMode === Mode.Edit ? 'Update' : 'Save'}</CustomButton>
+            </>
+          )}
+        </> : <CustomButton onClick={() => navigate('/articles')} className="mr-4">&laquo; All Articles</CustomButton>}
       </div>
-      {/* <>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block" htmlFor="title">Title: </label>
-            <TextInput
-              id="title"
-              type="text"
-              name="title"
-              value={article?.title}
-              onChange={(e: ChangeEvent): void => setArticle({...article, title: (e.currentTarget as HTMLInputElement).value})}
-            />
-          </div>
-          <div>
-            <label className="block" htmlFor="content">Content: </label>
-            <textarea
-              id="content"
-              name="content"
-              value={article?.content}
-              className="p-1 bg-input-bg text-input-text w-full sm:w-4/5 border-0 outline-0 rounded-sm overflow-hidden"
-              onChange={(e: ChangeEvent): void => setArticle({...article, content: (e.currentTarget as HTMLInputElement).value})}
-            />
-          </div>
-        </div>
-        <CustomButton type="button" onClick={() => article.id ? setSearchParams() : navigate('/articles')}>&laquo; Cancel</CustomButton>
-        <CustomButton type="submit" onClick={saveArticle} className="ml-4">{article.id ? 'Update' : 'Save'}</CustomButton>
-      </> */}
     </Layout>
   )
 }
