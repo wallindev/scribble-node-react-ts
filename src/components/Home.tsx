@@ -1,26 +1,21 @@
-import { FC } from 'react'
-import { Link } from 'react-router-dom'
+import type { FC, JSX } from 'react'
+import Layout from './layout/Layout'
 import Logout from './shared/Logout'
-import { isAuthenticated } from '../functions'
-import HomeNav from './shared/HomeNav'
+import TextLink from './shared/TextLink'
+import type { IGlobal } from '../types/general.types'
+import { isAuthenticated } from '../utils/functions'
 
-const StartPage: FC = () => {
+const Home: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
   return (
-    <div>
-      <HomeNav />
-      <h1>Welcome to Your Home Page!</h1>
-      <p>
-        Here you can manage your <Link to="/articles">Articles</Link> and your <Link to="/profile">Profile</Link>.<br />
-        Scribble away, and save all your thoughts and ideas in one place!
-      </p>
+    <Layout loading={loading} theme={theme} setTheme={setTheme}>
       <div>
-        <Link to="/articles" style={{ marginRight: '20px' }}>Articles</Link>
-        <Link to="/profile">Profile</Link>
+        <h1 className="text-2xl font-bold mb-4">Welcome to Your Home Page!</h1>
+        <p className="mb-1">Here you can manage your <TextLink to="/articles">Articles</TextLink> and your <TextLink to="/profile">Profile</TextLink>.</p>
+        <p className="mb-1">Scribble away, and save all your thoughts and ideas in one place!</p>
+        {isAuthenticated() && <div className="mt-2"><Logout /></div>}
       </div>
-
-      {isAuthenticated() && <div><br /><Logout /></div>}
-    </div>
+    </Layout>
   )
 }
 
-export default StartPage
+export default Home
