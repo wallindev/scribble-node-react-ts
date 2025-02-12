@@ -1,20 +1,24 @@
-import { FC } from 'react'
-import { Link } from 'react-router-dom'
+import type { FC, JSX } from 'react'
+import Layout from './layout/Layout'
+import TextLink from './shared/TextLink'
+import type { IGlobal } from '../types/general.types'
 
-const StartPage: FC = () => {
+const StartPage: FC<IGlobal> = ({ loading, theme, setTheme, setLoading }): JSX.Element => {
   return (
-    <div>
-      <h1>Welcome to Scribble!</h1>
-      <p>
-        Scribble! - a tiny web app where you can create and manage your articles.<br />
-        Join our community and share your thoughts with the world!
-      </p>
+    <Layout loading={loading} theme={theme} setTheme={setTheme}>
       <div>
-        <Link to="/login" style={{ marginRight: '20px' }}>Sign In</Link>
-        <Link to="/register">Register</Link>
+        <h1 className="text-2xl font-bold mb-4">Welcome to Scribble!</h1>
+        <div>
+        <p>Scribble! - a tiny web app where you can create and manage your articles.</p>
+        <p>Join our community and share your thoughts with the world!</p>
+        </div>
+        <div className="mt-2">
+          <TextLink to="/login" style={{ marginRight: '20px' }}>Sign In</TextLink>
+          <TextLink to="/register">Register</TextLink>
+        </div>
       </div>
-    </div>
-  );
+    </Layout>
+  )
 }
 
 export default StartPage
