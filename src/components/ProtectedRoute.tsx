@@ -1,13 +1,12 @@
-import { FC, JSX } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
-
-import { isAuthenticated } from '../functions';
+import type { FC, JSX } from 'react'
+import { isAuthenticated } from '../utils/functions'
 
 const ProtectedRoute: FC = (): JSX.Element => {
   if (!isAuthenticated()) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" />
   }
-  return <Outlet />;
+  return <Outlet />
 }
 
 export default ProtectedRoute
