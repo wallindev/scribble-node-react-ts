@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import axios/* , { AxiosError } */ from 'axios'
+import axios from 'axios'
 import type { KeyboardEvent, FocusEvent, FC, JSX } from 'react'
-import type { Axios, AxiosError, AxiosResponse } from 'axios'
+import type { AxiosError, AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import CustomButton from './shared/CustomButton'
 import FlashMessage from './shared/FlashMessage'
@@ -191,7 +191,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
             onDismiss={() => dismissFlashMessage(flashMessage, setFlashMessage)}
           />
         )}
-        {article.title && article.content ? <>
+        {/* article.title && article.content ? <> */}
           {articleMode !== Mode.Show && <h3 className="text-xl mb-4">{articleMode === Mode.Edit ? 'Edit' : 'New'} Article</h3>}
           <div
             ref={divTitleRef}
@@ -223,7 +223,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
               <CustomButton type="submit" onClick={saveArticle} className="ml-4">{articleMode === Mode.Edit ? 'Update' : 'Save'}</CustomButton>
             </>
           )}
-        </> : <CustomButton onClick={() => navigate('/articles')} className="mr-4">&laquo; All Articles</CustomButton>}
+        {/* </> : <CustomButton onClick={() => navigate('/articles')} className="mr-4">&laquo; All Articles</CustomButton> */}
       </div>
     </Layout>
   )
