@@ -3,7 +3,7 @@ import Layout from './layout/Layout'
 import TextLink from './shared/TextLink'
 import type { IGlobal } from '../types/general.types'
 
-const StartPage: FC<IGlobal> = ({ loading, theme, setTheme, setLoading }): JSX.Element => {
+const StartPage: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
   return (
     <Layout loading={loading} theme={theme} setTheme={setTheme}>
       <div>
