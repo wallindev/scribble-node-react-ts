@@ -1,17 +1,19 @@
-import { FC, MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import type { FC, JSX, MouseEvent } from 'react'
+import CustomButton from './CustomButton'
+import { setAuth } from '../../utils/functions'
 
-const Logout: FC = () => {  // Explicitly typed as a functional component
+const Logout: FC = (): JSX.Element => {
   const navigate = useNavigate()
 
-  const handleLogout = (event: MouseEvent<HTMLButtonElement>) => { // Type for event handler
-    event.preventDefault() // Prevent default form submission behavior (if wrapped in a form)
-    localStorage.removeItem('isAuthenticated')
+  const handleLogout = (e: MouseEvent<HTMLButtonElement>): void => {
+    e.preventDefault()
+    setAuth(false)
     navigate('/')
   }
 
   return (
-    <button onClick={handleLogout}>Logout</button>
+    <CustomButton onClick={handleLogout}>Logout</CustomButton>
   )
 }
 
