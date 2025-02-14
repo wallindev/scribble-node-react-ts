@@ -25,18 +25,3 @@ export interface ITextInput {
   onChange?: ChangeEventHandler<HTMLInputElement>
   [key: string]: any
 }
-
-export interface IFormButton {
-  className?: string
-  children?: ReactNode
-  type?: 'button' | 'submit' | 'reset'
-  onClick?: MouseEventHandler<HTMLButtonElement>
-  [key: string]: any
-}
-
-export interface ILinkButton {
-  className?: string
-  to: string
-  children?: ReactNode
-  [key: string]: any
-}
