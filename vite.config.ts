@@ -1,7 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react-swc'
-import tailwindcss from '@tailwindcss/vite'
-import injectEnvToHtml from './plugins/inject-env-to-html.ts'
+import tailwindCss from '@tailwindcss/vite'
+import injectEnvToHtml from './plugins/injectEnvToHtml.ts'
 
 // https://vite.dev/config/
 /** @type {import('vite').UserConfig} */
@@ -16,7 +16,7 @@ export default ({ mode = 'development' }) => {
     /* mode: mode || 'development', */
     plugins: [
       react(),
-      tailwindcss(),
+      tailwindCss(),
       injectEnvToHtml(),
     ],
     server: {
