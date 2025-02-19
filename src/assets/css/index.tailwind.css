@@ -10,18 +10,26 @@
 
 @theme {
 
-/* Mycolor.space   */
-/* Purple?         */
---color-1: #1f0660;
---color-2: #7652b4;
---color-3: #845EC2;
---color-4: #a178df;
---color-5: #be93fd;
---color-6: #dcb0ff;
---color-7: #f3c5ff;
---color-8: #faccff;
---color-9: #ffe4ff;
-/*                 */
+  /* Mycolor.space   */
+  /* Purple?         */
+  --color-1: #1f0660;
+  --color-2: #7652b4;
+  --color-3: #845EC2;
+  --color-4: #a178df;
+  --color-5: #be93fd;
+  --color-6: #dcb0ff;
+  --color-7: #f3c5ff;
+  --color-8: #faccff;
+  --color-9: #ffe4ff;
+  /*                 */
+
+  --color-red: #ff0000;
+  --color-orange: #ffa500;
+  --color-yellow: #ffff00;
+  --color-green: #008000;
+  --color-blue: #0000ff;
+  --color-indigo: #4b0082;
+  --color-violet: #ee82ee;
 
   --font-sans: Roboto, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   --tw-leading: 1;
