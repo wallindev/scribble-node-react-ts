@@ -42,7 +42,9 @@
   /* Dark theme base colors */
   --color-text: #ffffffde;
   --color-text-rgba: rgba(255, 255, 255, 0.87);
-  --color-text--hover: #2563eb;
+  /* --color-text--hover: #2563eb; */
+  --color-link: #007bff;
+  --color-link--hover: #0056b3;
   --color-page-bg: #0f0f0f;
   --color-page-bg_old: #18181a;
   --color-content-bg: #1a1a1a;
@@ -60,7 +62,9 @@
 @layer base {
   [data-theme='Default'] {
     --color-text: #ffffffde;
-    --color-text--hover: #2563eb;
+    /* --color-text--hover: #2563eb; */
+    --color-link: #007bff;
+    --color-link--hover: #0056b3;
     --color-page-bg: #0f0f0f;
     --color-content-bg: #1a1a1a;
     --color-main-content-bg: #242424;
@@ -74,7 +78,9 @@
 
   [data-theme='Red'] {
     --color-text: #ffffffde;
-    --color-text--hover: #2563eb;
+    /* --color-text--hover: #2563eb; */
+    --color-link: #dc143c;
+    --color-link--hover: #ea143c;
     --color-page-bg: #8b0000;
     --color-content-bg: #a52a2a;
     --color-main-content-bg: #b22222;
@@ -94,7 +100,9 @@
 
   [data-theme='Orange'] {
     --color-text: #ffffffde;
-    --color-text--hover: #2563eb;
+    /* --color-text--hover: #2563eb; */
+    --color-link: #cd853f;
+    --color-link--hover: #daa520;
     --color-page-bg: #8b4513;
     --color-content-bg: #a0522d;
     --color-main-content-bg: #d2691e;
@@ -114,7 +122,9 @@
 
   [data-theme='Yellow'] {
     --color-text: #ffffffde;
-    --color-text--hover: #2563eb;
+    /* --color-text--hover: #2563eb; */
+    --color-link: #f0e68c;
+    --color-link--hover: #ffd700;
     --color-page-bg: #8b8000;
     --color-content-bg: #bdb76b;
     --color-main-content-bg: #eee8aa;
@@ -134,7 +144,9 @@
 
   [data-theme='Green'] {
     --color-text: #ffffffde;
-    --color-text--hover: #2563eb;
+    /* --color-text--hover: #2563eb; */
+    --color-link: #3cb371;
+    --color-link--hover: #6b8e23;
     --color-page-bg: #006400;
     --color-content-bg: #228b22;
     --color-main-content-bg: #2e8b57;
@@ -154,7 +166,9 @@
 
   [data-theme='Blue'] {
     --color-text: #ffffffde;
-    --color-text--hover: #2563eb;
+    /* --color-text--hover: #2563eb; */
+    --color-link: #6495ed;
+    --color-link--hover: #1e90ff;
     --color-page-bg: #00008b;
     --color-content-bg: #2f4f4f;
     --color-main-content-bg: #4682b4;
@@ -174,7 +188,9 @@
 
   [data-theme='Indigo'] {
     --color-text: #ffffffde;
-    --color-text--hover: #2563eb;
+    /* --color-text--hover: #2563eb; */
+    --color-link: #8a2be2;
+    --color-link--hover: #9370db;
     --color-page-bg: #483d8b;
     --color-content-bg: #6a5acd;
     --color-main-content-bg: #7b68ee;
@@ -194,7 +210,9 @@
 
   [data-theme='Violet'] {
     --color-text: #ffffffde;
-    --color-text--hover: #2563eb;
+    /* --color-text--hover: #2563eb; */
+    --color-link: #9932cc;
+    --color-link--hover: #ba55d3;
     --color-page-bg: #4b0082;
     --color-content-bg: #800080;
     --color-main-content-bg: #9400d3;
@@ -214,7 +232,9 @@
 
   [data-theme='Pink'] {
     --color-text: #ffffffde;
-    --color-text--hover: #2563eb;
+    /* --color-text--hover: #2563eb; */
+    --color-link: #e0115f;
+    --color-link--hover: #ff69b4;
     --color-page-bg: #8b3a62;
     --color-content-bg: #c71585;
     --color-main-content-bg: #db7093;
@@ -234,7 +254,9 @@
 
   [data-theme='Purple'] {
     --color-text: #ffffffde;
-    --color-text--hover: #2563eb;
+    /* --color-text--hover: #2563eb; */
+    --color-link: #9370db;
+    --color-link--hover: #a020f0;
     --color-page-bg: #580f41;
     --color-content-bg: #663399;
     --color-main-content-bg: #800080;
@@ -254,7 +276,9 @@
 
   [data-theme='Gray'] {
     --color-text: #ffffffde;
-    --color-text--hover: #2563eb;
+    /* --color-text--hover: #2563eb; */
+    --color-link: #a9a9a9;
+    --color-link--hover: #c0c0c0;
     --color-page-bg: #2f4f4f;
     --color-content-bg: #696969;
     --color-main-content-bg: #808080;
@@ -286,7 +310,8 @@
       display: none !important;
     }
     .nav-large{
-      display: block !important;
+      display: flex !important;
+      align-items: center;
     }
     .nav-open{
       display: none !important;
