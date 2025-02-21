@@ -3,9 +3,9 @@
     {
       "id": "1",
       "title": "Test",
-      "content": "Testar",
+      "content": "Testing",
       "created": "2025-03-15 01:32:23",
-      "modified": "2025-03-15 01:32:23",
+      "modified": "2025-03-19 01:28:33",
       "userId": "1"
     },
     {
@@ -21,20 +21,21 @@
       "title": "Test 3",
       "content": "Testar 3",
       "created": "2025-03-15 02:52:51",
-      "modified": "2025-03-15 03:52:51",
+      "modified": "2025-03-20 09:57:50",
       "userId": "1"
     }
   ],
   "users": [
     {
       "id": "1",
-      "firstname": "Mikael",
-      "lastname": "Wallin",
+      "firstName": "Mikael",
+      "lastName": "Wallin",
       "email": "mikael.wallin@yahoo.se",
       "password": "ldkfgjhalkjgelgjfdhlgkjfhglkjfh",
       "salt": "argaegre",
+      "authToken": "123456abcdef",
       "created": "2025-03-15 02:32:23",
-      "modified": "2025-03-15 02:32:23"
+      "modified": "2025-03-20 18:08:43"
     }
   ]
 }
