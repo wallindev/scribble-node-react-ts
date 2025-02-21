@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import axios from 'axios'
-import type { KeyboardEvent, FocusEvent, FC, JSX } from 'react'
+import axios, { HttpStatusCode, isAxiosError } from 'axios'
+import type { FocusEvent, FC, JSX, KeyboardEvent, KeyboardEventHandler } from 'react'
 import type { AxiosError, AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import CustomButton from './shared/CustomButton'
 import FlashMessage from './shared/FlashMessage'
 import { Mode } from '../types/general.types'
 import type { IGlobal, Mode as TMode, TFlashMessage, TArticle } from '../types/general.types'
-import { dismissFlashMessage, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
-import { defaultArticle, defaultFlashMessage } from '../utils/defaults'
+import { consoleError, dismissFlashMessage, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
+import { defaultArticle, defaultFlashMessage, defaultContentText, defaultTitleText  } from '../utils/defaults'
 
 // import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect'
 
@@ -24,33 +24,18 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
   const divContentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    console.log('useEffect without dep')
-    // console.log('Re-render occured')
-    // console.log('articleMode:', Mode[articleMode])
+    // console.log('useEffect without dep')
     articleMode === Mode.New && setPlaceholderTexts()
+    setArticleMode(searchParams.has('edit') ? Mode.Edit : params.id ? Mode.Show : Mode.New)
   })
 
-  useEffect(() => {
-    console.log('useEffect with empty dep')
-  }, [])
-
   // useEffect(() => {
-  //   console.log('location.key changed:')
-  //   console.log(location.key)
-  // }, [location.key])
-
-  // useEffect(() => {
-  //   console.log('params.id changed:')
-  //   console.log(params.id)
-  // }, [params.id])
-
-  // useEffect(() => {
-  //   console.log("searchParams.has('edit') changed:")
-  //   console.log(searchParams.has('edit'))
-  // }, [searchParams.has('edit')])
+  //   console.log('useEffect with empty dep')
+  // }, [])
 
   useEffect(() => {
-    setArticleMode(searchParams.has('edit') ? Mode.Edit : params.id ? Mode.Show : Mode.New)
+    // TODO: Check if setFlashMessage and setPlaceholderTexts work correctly
+    articleMode !== Mode.Edit && setFlashMessage(defaultFlashMessage)
     if (params.id) {
       if (!Number.isInteger(Number(params.id))) {
         setFlashMessage({
@@ -67,25 +52,22 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
                 Authorization: `Bearer ${localStorage.getItem('token')}`,
               },
             } */)
-            console.log('response.status:', response.status)
             if (response.status === 200 && response.data) {
               setArticle(response.data)
             }
           } catch (error) {
-            if (axios.isAxiosError(error))  {
+            if (isAxiosError(error))  {
               const axiosError = error as AxiosError
-              console.log('axiosError.status:', axiosError.status)
+              consoleError(axiosError)
               switch (axiosError.status) {
-                case 404:
-                  console.error('Error 404: Article does not exist')
+                case HttpStatusCode.NotFound:
                   setFlashMessage({
-                    message: 'Article does not exist',
+                    message: 'Article not found',
                     type: 'error',
                     visible: true,
                   })
                   break
                 default:
-                  console.error('A generic error occured.')
                   setFlashMessage({
                     message: 'Something unexpected happened.',
                     type: 'error',
@@ -93,7 +75,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
                   })
               }
             } else {
-              console.error("Error fetching article:\n", error)
+              console.error(`Error fetching article:\n${error}`)
               setFlashMessage({
                 message: `Error fetching article:<br />${error}`,
                 type: 'error',
@@ -110,33 +92,86 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
       }
     }
     // TODO: searchParams.get or searchParams.has or something else?
-  }, [params.id, searchParams.get('edit')])
+  }, [params.id, searchParams.has('edit')])
 
   const saveArticle = (): void => {
     const articleData: TArticle = {
       title: (divTitleRef.current as HTMLDivElement).innerText,
       content: (divContentRef.current as HTMLDivElement).innerText,
-      created: articleMode === Mode.Edit ? undefined : localDateStr(),
+      created: articleMode === Mode.Edit ? null : localDateStr(),
       modified: localDateStr(),
     }
     // console.log('articleData: ', articleData)
     articleMode === Mode.Edit ? updateArticle(articleData) : storeArticle(articleData)
   }
 
+  // Update existing Article (PATCH). Partial<Article> because of the PATCH partial update.
+  const updateArticle = async (artcl: Partial<TArticle>) => {
+    let error
+    try {
+      // console.log('params.id:', params.id)
+      const response: AxiosResponse = await axios.patch(`/articles/${params.id}`, artcl)
+      // console.log('response.data:', response.data)
+      setArticle(response.data)
+    } catch (error) {
+      if (isAxiosError(error))  {
+        const axiosError: AxiosError = error as AxiosError
+        consoleError(axiosError)
+        setFlashMessage({
+          message: 'An error occured when updating article',
+          type: 'error',
+          visible: true,
+        })
+      } else {
+        console.error("Error updating article:\n", error)
+        setFlashMessage({
+          message: `Error updating article:<br />${error}`,
+          type: 'error',
+          visible: true,
+        })
+      }
+    }
+    if (!error) {
+      console.log('Showing message')
+      setFlashMessage({
+        message: 'Article updated successfully',
+        type: 'success',
+        visible: true,
+      })
+      // Remove querystring, so '/articles/:id?edit' becomes '/articles/:id'
+      setSearchParams('', {preventScrollReset: true})
+    }
+  }
+
   // Store new Article (POST)
   const storeArticle = async (artcl: TArticle): Promise<void> => {
+    let error
     try {
+      // console.log('params.id:', params.id)
       const response: AxiosResponse = await axios.post('/articles', artcl)
+      // console.log('response.data:', response.data)
       setArticle(response.data)
       navigate(`/articles/${response.data.id}`)
     } catch (error) {
-      console.error('Error saving article:', error)
-      setFlashMessage({
-        message: `Error saving article:<br />${error}`,
-        type: 'error',
-        visible: true,
-      })
-    } finally {
+      if (isAxiosError(error))  {
+        const axiosError: AxiosError = error as AxiosError
+        consoleError(axiosError)
+        console.error('Error saving article:', error)
+        setFlashMessage({
+          message: `Error saving article:<br />${error}`,
+          type: 'error',
+          visible: true,
+        })
+      } else {
+        console.error("Error saving article:\n", error)
+        setFlashMessage({
+          message: `Error saving article:<br />${error}`,
+          type: 'error',
+          visible: true,
+        })
+      }
+    }
+    if (!error) {
       setFlashMessage({
         message: 'Article saved successfully',
         type: 'success',
@@ -148,36 +183,19 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
     }
   }
 
-  // Update existing Article (PATCH). Partial<Article> because of the PATCH partial update.
-  const updateArticle = async (artcl: Partial<TArticle>) => {
-    try {
-      console.log('params.id:', params.id)
-      const response: AxiosResponse = await axios.patch(`/articles/${params.id}`, artcl)
-      console.log('response.data:', response.data)
-      setArticle(response.data)
-    } catch (error) {
-      console.error('Error updating article:', error)
-      setFlashMessage({
-        message: `Error updating article:<br />${error}`,
-        type: 'error',
-        visible: true,
-      })
-    } finally {
-      setFlashMessage({
-        message: 'Article updated successfully',
-        type: 'success',
-        visible: true,
-      })
-      // Remove querystring, so '/articles/:id?edit' becomes '/articles/:id'
-      setSearchParams('', {preventScrollReset: true})
+  const setPlaceholderTexts = (): void => {
+    if (divTitleRef.current && divContentRef.current) {
+      setElementText(divTitleRef.current, defaultTitleText)
+      setElementText(divContentRef.current, defaultContentText)
+      selectElementText(divTitleRef.current, defaultTitleText)
     }
   }
 
-  const setPlaceholderTexts = (): void => {
-    if (divTitleRef.current && divContentRef.current) {
-      setElementText(divTitleRef.current, '[Title here]')
-      setElementText(divContentRef.current, '[Content here]')
-      selectElementText(divTitleRef.current, '[Title here]')
+  const keyDownOnElement: KeyboardEventHandler = (key: KeyboardEvent<HTMLDivElement>) => {
+    console.log('key.code:', key.code)
+    if (key.code.toUpperCase() === 'ENTER' || key.code.toUpperCase() === 'NUMPADENTER') {
+      key.preventDefault()
+      saveArticle()
     }
   }
 
@@ -192,21 +210,21 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
           />
         )}
         {/* article.title && article.content ? <> */}
-          {articleMode !== Mode.Show && <h3 className="text-xl mb-4">{articleMode === Mode.Edit ? 'Edit' : 'New'} Article</h3>}
+          <h3 className="text-2xl font-bold mb-4">{articleMode === Mode.Edit ? 'Edit ' : articleMode === Mode.New ? 'New ' : ''}Article</h3>
           <div
             ref={divTitleRef}
-            className={`${articleMode !== Mode.Show ? ' inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 ' : ''}block text-2xl mb-4`}
-            dangerouslySetInnerHTML={{ __html: replaceNewlinesWithBr(article.title) }}
+            className={`${articleMode !== Mode.Show ? 'inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 ' : ''}block text-2xl mb-4`}
+            dangerouslySetInnerHTML={{ __html: article.title }}
             contentEditable={articleMode !== Mode.Show ? true : false}
-            onFocus={(e: FocusEvent<HTMLDivElement>) => {articleMode === Mode.New ? selectElementText(e.target, '[Title here]') : undefined}}
-            onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => e.code.toUpperCase() === 'ENTER' && e.preventDefault()}
+            onFocus={(e: FocusEvent<HTMLDivElement>) => {articleMode === Mode.New ? selectElementText(e.target, defaultTitleText) : undefined}}
+            onKeyDown={keyDownOnElement}
           />
           <div
             ref={divContentRef}
-            className={`${articleMode !== Mode.Show ? ' inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 ' : ''}min-h-32 block mt-2 mb-4`}
+            className={`${articleMode !== Mode.Show ? 'inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 ' : ''}min-h-32 block mt-2 mb-4`}
             dangerouslySetInnerHTML={{ __html: replaceNewlinesWithBr(article.content) }}
             contentEditable={articleMode !== Mode.Show ? true : false}
-            onFocus={(e: FocusEvent<HTMLDivElement>) => {articleMode === Mode.New ? selectElementText(e.target, '[Content here]') : undefined}}
+            onFocus={(e: FocusEvent<HTMLDivElement>) => {articleMode === Mode.New ? selectElementText(e.target, defaultContentText) : undefined}}
           />
           <div className="flex justify-between items-center mb-4 text-xs">
             <div>Created: {localDateStr(article.created)}</div>
