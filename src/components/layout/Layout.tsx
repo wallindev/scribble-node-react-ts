@@ -12,7 +12,7 @@ const Layout: FC<ILayout> = ({ loading, theme, setTheme, children }): JSX.Elemen
       <header>
         <MainNav />
       </header>
-      <main className="flex-1 p-2 sm:p-4 bg-main-content-bg rounded-xl overflow-y-auto">
+      <main className="flex-1 p-4 sm:p-4 bg-main-content-bg rounded-xl overflow-y-auto">
         {children}
       </main>
       <footer>
