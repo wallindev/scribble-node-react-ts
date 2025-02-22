@@ -4,14 +4,14 @@ import type { FC, JSX } from 'react'
 import Layout from './layout/Layout'
 import AuthForm from './shared/AuthForm'
 import type { IGlobal } from '../types/general.types'
-import { setAuth } from '../utils/functions'
+import { login } from '../utils/functions'
 
 const Login: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
   const navigate = useNavigate()
 
   const handleLogin = async (username: string, password: string): Promise<void> => {
     // try {
-    //   const response: AxiosResponse = await axios.post('/api/login', { username, password }) // Your Laravel login route
+    //   const response: AxiosResponse = await axios.post('/api/login', { email, password })
     //   localStorage.setItem('token', response.data.token) // Store the token
     //   navigate('/home') // Redirect to the user home page
     // } catch (error) {
@@ -20,7 +20,7 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
     // }
     if (username === 'mikael' && password === 'grunge' ||
       username === 'lisbeth' && password === 'larsson') {
-      setAuth(true)
+      login()
       navigate('/home')
     } else {
       alert('Invalid credentials')
