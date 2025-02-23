@@ -10,9 +10,14 @@ export interface ICustomButton {
   className?: string
   type?: 'button' | 'submit' | 'reset'
   onClick?: MouseEventHandler<HTMLButtonElement>
-  size?: 'small' | 'large'
+  size?: 'small' | 'medium' | 'large'
   to?: string
   children: ReactNode
+  [key: string]: any
+}
+
+export interface ILogout {
+  size?: 'small' | 'medium' | 'large'
   [key: string]: any
 }
 
@@ -22,6 +27,8 @@ export interface ITextInput {
   name?: string
   type: string
   value?: string
+  disabled?: boolean
   onChange?: ChangeEventHandler<HTMLInputElement>
+  onFocus?: ChangeEventHandler<HTMLInputElement>
   [key: string]: any
 }
