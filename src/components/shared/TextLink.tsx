@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import type { ITextLink } from '../../types/general.types'
 
 const TextLink: FC<ITextLink> = ({ className, to, children, style, ...props }): JSX.Element => {
-  let classNames = 'text-text visited:text-text hover:no-underline hover:text-text--hover'
+  let classNames = 'text-link visited:text-link hover:no-underline hover:text-link--hover'
   className ? `${classNames} ${className}` : className
 
   return (
