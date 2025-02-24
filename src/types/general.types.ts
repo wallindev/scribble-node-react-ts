@@ -29,10 +29,22 @@ export enum Theme {
  *
  */
 export type TArticle = {
-  id?: number | string | null
+  id?: number | null
   title: string
   content: string
-  created?: string | null
+  created: string | null
+  modified: string
+}
+
+export type TUser = {
+  id?: number | null
+  firstName: string
+  lastName: string
+  email: string
+  password?: string | null
+  passwordConfirm?: string | null
+  authToken?: string | null
+  created: string | null
   modified: string
 }
 
