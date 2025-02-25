@@ -8,7 +8,7 @@ import CustomButton from './shared/CustomButton'
 import FlashMessage from './shared/FlashMessage'
 import { Mode } from '../types/general.types'
 import type { IGlobal, Mode as TMode, TFlashMessage, TArticle } from '../types/general.types'
-import { consoleError, dismissFlashMessage, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
+import { consoleError, dismissFlashMessage, getUserId, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
 import { defaultArticle, defaultFlashMessage, defaultContentText, defaultTitleText  } from '../utils/defaults'
 
 // import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect'
@@ -100,6 +100,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
       content: (divContentRef.current as HTMLDivElement).innerText,
       created: articleMode === Mode.Edit ? null : localDateStr(),
       modified: localDateStr(),
+      userId: getUserId() as number
     }
     // console.log('articleData: ', articleData)
     articleMode === Mode.Edit ? updateArticle(articleData) : storeArticle(articleData)
@@ -132,7 +133,6 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
       }
     }
     if (!error) {
-      console.log('Showing message')
       setFlashMessage({
         message: 'Article updated successfully',
         type: 'success',
@@ -192,7 +192,6 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
   }
 
   const keyDownOnElement: KeyboardEventHandler = (key: KeyboardEvent<HTMLDivElement>) => {
-    console.log('key.code:', key.code)
     if (key.code.toUpperCase() === 'ENTER' || key.code.toUpperCase() === 'NUMPADENTER') {
       key.preventDefault()
       saveArticle()
