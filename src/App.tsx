@@ -35,7 +35,7 @@ const App: FC = (): JSX.Element => {
       <Routes>
         <Route path="/" element={<StartPage {...globalProps} />} />
         <Route path="/login" element={<Login {...globalProps} />} />
-        <Route path="/register" element={<User {...globalProps} />} />
+        <Route path="/register" element={<Register {...globalProps} />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/home" element={<Home {...globalProps} />} />
           <Route path="/profile" element={<User {...globalProps} />} />
