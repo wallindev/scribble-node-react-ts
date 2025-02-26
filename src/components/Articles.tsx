@@ -8,13 +8,35 @@ import CustomButton from './shared/CustomButton'
 import FlashMessage from './shared/FlashMessage'
 import TextLink from './shared/TextLink'
 import type { TArticle, IGlobal, TFlashMessage } from '../types/general.types'
-import { dismissFlashMessage } from '../utils/functions'
+import { dismissFlashMessage, getToken } from '../utils/functions'
 import { defaultFlashMessage } from '../utils/defaults'
 
 const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Element => {
   const navigate = useNavigate()
   const [articles, setArticles] = useState<TArticle[]>([])
   const [flashMessage, setFlashMessage] = useState<TFlashMessage>(defaultFlashMessage)
+
+  useEffect(() => {
+    !(async (): Promise<void> => {
+      setLoading!(true)
+      try {
+        const response: AxiosResponse = await axios.get('/articles', {
+          headers: {
+            Authorization: `Bearer ${getToken()}`
+          }
+        })
+        // console.log(response.data)
+        setArticles(response.data)
+      } catch (error) {
+        console.error('Error fetching articles:', error)
+      } finally {
+        // To mock slow network
+        // setTimeout(() => {
+          setLoading!(false)
+        // }, 5000)
+      }
+    })()
+  }, [])
 
   const deleteArticle = (artcl: TArticle): void => {
     if (confirm(`Do you really want to delete article '${artcl.title}'`)) {
@@ -52,28 +74,6 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.El
       })()
     }
   }
-
-  useEffect(() => {
-    !(async (): Promise<void> => {
-      setLoading!(true)
-      try {
-        const response: AxiosResponse = await axios.get('/articles'/* , {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        } */)
-        // console.log(response.data)
-        setArticles(response.data)
-      } catch (error) {
-        console.error('Error fetching articles:', error)
-      } finally {
-        // To mock slow network
-        // setTimeout(() => {
-          setLoading!(false)
-        // }, 5000)
-      }
-    })()
-  }, [])
 
   return (
     <Layout loading={loading} theme={theme} setTheme={setTheme}>
