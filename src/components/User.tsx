@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { useMatch, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useMatch, useNavigate, useSearchParams } from 'react-router-dom'
 import axios, { HttpStatusCode, isAxiosError } from 'axios'
-import type { KeyboardEvent, FC, JSX, ChangeEvent, FocusEvent, KeyboardEventHandler } from 'react'
+import type { ChangeEvent, FocusEvent, KeyboardEvent, FC, JSX, KeyboardEventHandler } from 'react'
 import type { AxiosError, AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import TextInput from './shared/TextInput'
@@ -15,10 +15,8 @@ import { defaultFlashMessage, defaultUser } from '../utils/defaults'
 // import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect'
 
 const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Element => {
-  const params = useParams<{ id: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const matchProfile = useMatch('/profile')
-  const matchRegister = useMatch('/register')
   const navigate = useNavigate()
   const [user, setUser] = useState<TUser>(defaultUser)
   const [flashMessage, setFlashMessage] = useState<TFlashMessage>(defaultFlashMessage)
@@ -96,13 +94,13 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Elemen
 
   const saveUser = (): void => {
     const userData: TUser = {
-      id: matchRegister ? undefined : user.id,
+      id: userMode === Mode.New ? undefined : user.id,
       firstName: (inputFirstNameRef.current as HTMLInputElement).value,
       lastName: (inputLastNameRef.current as HTMLInputElement).value,
       email: (inputEmailRef.current as HTMLInputElement).value,
-      password: matchRegister ? (inputPasswordRef.current as HTMLInputElement).value : undefined,
-      passwordConfirm: matchRegister ? (inputPasswordConfirmRef.current as HTMLInputElement).value : undefined,
-      created: matchRegister ? localDateStr() : null,
+      password: userMode === Mode.New ? (inputPasswordRef.current as HTMLInputElement).value : undefined,
+      passwordConfirm: userMode === Mode.New ? (inputPasswordConfirmRef.current as HTMLInputElement).value : undefined,
+      created: userMode === Mode.New ? localDateStr() : null,
       modified: localDateStr(),
     }
     // console.log('userData: ', userData)
@@ -113,21 +111,19 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Elemen
   const updateUser = async (usr: Partial<TUser>) => {
     let error
     try {
-      // console.log('usr:', usr)
-      // return
       const response: AxiosResponse = await axios.patch(`/users/${usr.id}`, usr)
-      console.log('response.data:', response.data)
       setUser(response.data)
-    } catch (error) {
-      if (isAxiosError(error))  {
-        const axiosError: AxiosError = error as AxiosError
-        consoleError(axiosError)
+    } catch (e) {
+      if (isAxiosError(e))  {
+        error = e as AxiosError
+        consoleError(error)
         setFlashMessage({
           message: 'An error occured when updating profile',
           type: 'error',
           visible: true,
         })
       } else {
+        error = e
         console.error("Error updating profile:\n", error)
         setFlashMessage({
           message: `Error updating profile:<br />${error}`,
@@ -152,7 +148,6 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Elemen
     return
     let error
     try {
-      // console.log('params.id:', params.id)
       const response: AxiosResponse = await axios.post('/users', usr)
       // console.log('response.data:', response.data)
       setUser(response.data)
@@ -189,7 +184,6 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Elemen
   }
 
   const keyDownOnElement: KeyboardEventHandler = (key: KeyboardEvent<HTMLInputElement>) => {
-    // console.log('key.code:', key.code)
     if (key.code.toUpperCase() === 'ENTER' || key.code.toUpperCase() === 'NUMPADENTER') {
       key.preventDefault()
       saveUser()
@@ -251,7 +245,7 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Elemen
               type="email"
               ref={inputEmailRef}
               value={user.email}
-              className={`${!matchRegister ? 'w-full sm:w-8/10 inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 ' : ''}text-xl mb-4 bg-main-content-bg text-text`}
+              className={`${userMode !== Mode.New ? 'w-full sm:w-8/10 inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 ' : ''}text-xl mb-4 bg-main-content-bg text-text`}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setUser({ ...user, email: e.target.value })}
               onKeyDown={keyDownOnElement}
             />
