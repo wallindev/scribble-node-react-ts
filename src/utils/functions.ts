@@ -41,6 +41,9 @@ export const dismissFlashMessage = (
   setFlashMessage({ ...flashMessage, visible: false })
 }
 
+// Short-form of process.env.KEY
+export const env = (key: string) => process.env[key]
+
 // Helper function to check authentication status
 export const isAuthenticated = (): boolean => {
   // TODO: Change this to localStorage.getItem('token')
@@ -48,13 +51,16 @@ export const isAuthenticated = (): boolean => {
   return localStorage.getItem('AUTHENTICATED') === 'true' && hasUserId()
 }
 
-export const login = (): void => {
+export const login = (token: string, userId: number): void => {
   setAuth(true)
-  setUserId(1)
+  setToken(token)
+  setUserId(userId)
 }
 
 export const logout = (): void => {
   setAuth(false)
+  removeToken()
+  removeUserId()
 }
 
 export const setAuth = (authenticated: boolean): void => {
@@ -76,6 +82,18 @@ export const hasUserId = (): boolean => {
 
 export const setUserId = (userId: number): void => {
   localStorage.setItem('userId', userId.toString())
+}
+
+export const getToken = (): string | null => {
+  return localStorage.getItem('token')
+}
+
+export const setToken = (token: string): void => {
+  localStorage.setItem('token', token)
+}
+
+export const removeToken = (): void => {
+  localStorage.removeItem('token')
 }
 
 export const removeUserId = (): void => {
