@@ -5,7 +5,8 @@ export let defaultArticle: TArticle = {
   title: '',
   content: '',
   created: null,
-  modified: ''
+  modified: '',
+  userId: 0
 }
 export const defaultTitleText = '[Title Here]'
 export const defaultContentText = '[Content Here]'
