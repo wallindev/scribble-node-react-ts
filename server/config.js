@@ -1,14 +1,13 @@
 import path from 'node:path'
-import dotenv from 'dotenv'
+import env from 'dotenv'
 
 let filePathEnv
 try {
-  filePathEnv = path.resolve(process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env')
+  filePathEnv = path.resolve(`./server/.env${process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ''}`)
   !filePathEnv && console.error('Env file not found')
+  env.config({ path: filePathEnv })
 } catch (error) {
   console.error(`Error reading or parsing '${filePathEnv}' file:\n${error}`)
-} finally {
-  dotenv.config({ path: filePathEnv })
 }
 
 // Implement this? Use httpOnly and secure cookies!
