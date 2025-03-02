@@ -43,6 +43,7 @@ app.use([`${apiRoot}/users/:id${onlyDigits}`, `${apiRoot}/profile/:id${onlyDigit
 // Authentication middleware
 const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization
+  console.log('authHeader:', authHeader)
   if (!authHeader) return res.status(401).json({ message: 'Unauthorized' })
   const token = authHeader.split(' ')[1]
   try {
@@ -134,16 +135,19 @@ app.patch(`${apiRoot}/articles/:id${onlyDigits}`, async (req, res, next) => {
 })
 
 // Store new Article
-app.post('${apiRoot}/articles', authenticate, async (req, res, next) => {
+app.post(`${apiRoot}/articles`, authenticate, async (req, res, next) => {
   const { title, content } = req.body
   if (!title || !content) return res.status(400).json({ message: 'Invalid article data' })
 
+  console.log('title:', title)
+  console.log('content:', content)
+
   // Build new Article
-  const newId = await getMaxId(db, db.data.articles) + 1
+  const newId = await getMaxId(db, 'articles') + 1
   const newDate = localDateStr()
 
   const newArticle = {
-    id: newId,
+    id: newId.toString(),
     title,
     content,
     created: newDate,
@@ -224,7 +228,7 @@ app.post(`${apiRoot}/login`, async (req, res, next) => {
 
   const userId = user.id
   const jwtToken = generateToken(userId)
-  res.json({ jwtToken, userId })
+  res.json({ userId, jwtToken })
 })
 
 // Register user
