@@ -1,7 +1,7 @@
 {
-  "name": "react-ts",
+  "name": "node-react-ts",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "start": "cross-env NODE_ENV=production node server",
