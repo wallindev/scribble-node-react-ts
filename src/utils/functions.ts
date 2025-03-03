@@ -51,16 +51,16 @@ export const isAuthenticated = (): boolean => {
   return localStorage.getItem('AUTHENTICATED') === 'true' && hasUserId()
 }
 
-export const login = (token: string, userId: number): void => {
+export const login = (userId: number, token: string): void => {
   setAuth(true)
-  setToken(token)
   setUserId(userId)
+  setToken(token)
 }
 
 export const logout = (): void => {
   setAuth(false)
-  removeToken()
   removeUserId()
+  removeToken()
 }
 
 export const setAuth = (authenticated: boolean): void => {
