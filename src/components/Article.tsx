@@ -8,7 +8,7 @@ import CustomButton from './shared/CustomButton'
 import FlashMessage from './shared/FlashMessage'
 import { Mode } from '../types/general.types'
 import type { IGlobal, Mode as TMode, TFlashMessage, TArticle } from '../types/general.types'
-import { consoleError, dismissFlashMessage, getUserId, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
+import { consoleError, dismissFlashMessage, getToken, getUserId, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
 import { defaultArticle, defaultFlashMessage, defaultContentText, defaultTitleText  } from '../utils/defaults'
 
 // import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect'
@@ -19,13 +19,15 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
   const navigate = useNavigate()
   const [article, setArticle] = useState<TArticle>(defaultArticle)
   const [flashMessage, setFlashMessage] = useState<TFlashMessage>(defaultFlashMessage)
-  const [articleMode, setArticleMode] = useState<TMode>(Mode.Show)
+  const [articleMode, setArticleMode] = useState<TMode>(Mode.Edit)
   const divTitleRef = useRef<HTMLDivElement>(null)
   const divContentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // console.log('useEffect without dep')
     articleMode === Mode.New && setPlaceholderTexts()
+    // console.log("searchParams.has('edit'):", searchParams.has('edit'))
+    // console.log('params.id:', params.id)
     setArticleMode(searchParams.has('edit') ? Mode.Edit : params.id ? Mode.Show : Mode.New)
   })
 
@@ -35,7 +37,8 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
 
   useEffect(() => {
     // TODO: Check if setFlashMessage and setPlaceholderTexts work correctly
-    articleMode !== Mode.Edit && setFlashMessage(defaultFlashMessage)
+    // console.log(Mode[articleMode])
+    articleMode === Mode.Show && setFlashMessage(defaultFlashMessage)
     if (params.id) {
       if (!Number.isInteger(Number(params.id))) {
         setFlashMessage({
@@ -44,8 +47,9 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
           visible: true,
         })
       } else {
-        !(async () => {
+        !(async (): Promise<void> => {
           setLoading!(true)
+          let error
           try {
             const response: AxiosResponse = await axios.get(`/articles/${params.id}`/* , {
               headers: {
@@ -55,11 +59,11 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
             if (response.status === 200 && response.data) {
               setArticle(response.data)
             }
-          } catch (error) {
-            if (isAxiosError(error))  {
-              const axiosError = error as AxiosError
-              consoleError(axiosError)
-              switch (axiosError.status) {
+          } catch (e) {
+            if (isAxiosError(e))  {
+              error = e as AxiosError
+              consoleError(error)
+              switch (error.status) {
                 case HttpStatusCode.NotFound:
                   setFlashMessage({
                     message: 'Article not found',
@@ -75,9 +79,9 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
                   })
               }
             } else {
-              console.error(`Error fetching article:\n${error}`)
+              console.error(`Error fetching article:\n${e}`)
               setFlashMessage({
-                message: `Error fetching article:<br />${error}`,
+                message: `Error fetching article:<br />${e}`,
                 type: 'error',
                 visible: true,
               })
@@ -103,27 +107,29 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
       userId: getUserId() as number
     }
     // console.log('articleData: ', articleData)
+
     articleMode === Mode.Edit ? updateArticle(articleData) : storeArticle(articleData)
   }
 
   // Update existing Article (PATCH). Partial<Article> because of the PATCH partial update.
-  const updateArticle = async (artcl: Partial<TArticle>) => {
+  const updateArticle = async (artcl: Partial<TArticle>): Promise<void> => {
     let error
     try {
       // console.log('params.id:', params.id)
       const response: AxiosResponse = await axios.patch(`/articles/${params.id}`, artcl)
       // console.log('response.data:', response.data)
       setArticle(response.data)
-    } catch (error) {
-      if (isAxiosError(error))  {
-        const axiosError: AxiosError = error as AxiosError
-        consoleError(axiosError)
+    } catch (e) {
+      if (isAxiosError(e))  {
+        error = e as AxiosError
+        consoleError(error)
         setFlashMessage({
           message: 'An error occured when updating article',
           type: 'error',
           visible: true,
         })
       } else {
+        error = e
         console.error("Error updating article:\n", error)
         setFlashMessage({
           message: `Error updating article:<br />${error}`,
@@ -148,14 +154,18 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
     let error
     try {
       // console.log('params.id:', params.id)
-      const response: AxiosResponse = await axios.post('/articles', artcl)
+      const response: AxiosResponse = await axios.post('/articles', artcl, {
+        headers: {
+          Authorization: `Bearer ${getToken()}`
+        }
+      })
       // console.log('response.data:', response.data)
       setArticle(response.data)
       navigate(`/articles/${response.data.id}`)
-    } catch (error) {
-      if (isAxiosError(error))  {
-        const axiosError: AxiosError = error as AxiosError
-        consoleError(axiosError)
+    } catch (e) {
+      if (isAxiosError(e))  {
+        error = e as AxiosError
+        consoleError(error)
         console.error('Error saving article:', error)
         setFlashMessage({
           message: `Error saving article:<br />${error}`,
@@ -163,6 +173,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
           visible: true,
         })
       } else {
+        error = e
         console.error("Error saving article:\n", error)
         setFlashMessage({
           message: `Error saving article:<br />${error}`,
@@ -177,6 +188,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
         type: 'success',
         visible: true,
       })
+      console.log(articleMode)
       // TODO: is this needed?
       // Change mode to Show
       // setArticleMode(Mode.Show)
