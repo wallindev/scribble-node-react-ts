@@ -22,8 +22,8 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
     let error
     try {
       const response: AxiosResponse = await axios.post('/login', { email, password })
-      const { jwtToken, userId } = response.data
-      login(jwtToken, userId)
+      const { userId, jwtToken } = response.data
+      login(userId, jwtToken)
     } catch (e) {
       if (isAxiosError(e))  {
         error = e as AxiosError
@@ -34,6 +34,7 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
           visible: true,
         })
       } else {
+        error = e
         console.error("Error trying to log in:\n", error)
         setFlashMessage({
           message: `Error trying to log in:<br />${error}`,
