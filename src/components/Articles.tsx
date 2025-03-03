@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import axios, { isAxiosError } from 'axios'
 import type { FC, JSX } from 'react'
-import type { AxiosResponse } from 'axios'
+import type { AxiosError, AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import CustomButton from './shared/CustomButton'
 import FlashMessage from './shared/FlashMessage'
 import TextLink from './shared/TextLink'
 import type { TArticle, IGlobal, TFlashMessage } from '../types/general.types'
-import { dismissFlashMessage, getToken } from '../utils/functions'
+import { consoleError, dismissFlashMessage, getToken } from '../utils/functions'
 import { defaultFlashMessage } from '../utils/defaults'
 
 const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Element => {
@@ -38,40 +38,51 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.El
     })()
   }, [])
 
-  const deleteArticle = (artcl: TArticle): void => {
+  const deleteArticle = async (artcl: TArticle): Promise<void> => {
     if (confirm(`Do you really want to delete article '${artcl.title}'`)) {
-      !(async (): Promise<void> => {
-        setLoading!(true)
-        try {
-          const response: AxiosResponse = await axios.delete(`${'/articles'}/${artcl.id}`/* , {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
-            },
-          } */)
-          // console.log('response.data:', response.data)
-          const deletedArticle = response.data
-          const newArticles = articles.filter(article => article.id !== deletedArticle.id)
-          setArticles(newArticles)
-        } catch (error) {
+      let error
+      try {
+        const response: AxiosResponse = await axios.delete(`${'/articles'}/${artcl.id}`/* , {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        } */)
+        // console.log('response.data:', response.data)
+        const deletedArticle = response.data
+        const newArticles = articles.filter(article => article.id !== deletedArticle.id)
+        setArticles(newArticles)
+      } catch (e) {
+        if (isAxiosError(e))  {
+          error = e as AxiosError
+          consoleError(error)
           console.error('Error deleting article:', error)
           setFlashMessage({
             message: `Error updating article:<br />${error}`,
             type: 'error',
             visible: true,
           })
-        } finally {
+        } else {
+          error = e
+          console.error("Error deleting article:\n", error)
           setFlashMessage({
-            message: 'Article removed successfully',
-            type: 'success',
+            message: `Error deleting article:<br />${error}`,
+            type: 'error',
             visible: true,
           })
-          console.log('Deleted article', artcl.id)
-          // To mock slow network
-          // setTimeout(() => {
-            setLoading!(false)
-          // }, 5000)
         }
-      })()
+      }
+      if (!error) {
+        setFlashMessage({
+          message: 'Article removed successfully',
+          type: 'success',
+          visible: true,
+        })
+        console.log('Deleted article', artcl.id)
+        // To mock slow network
+        // setTimeout(() => {
+          setLoading!(false)
+        // }, 5000)
+      }
     }
   }
 
