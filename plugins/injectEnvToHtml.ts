@@ -20,8 +20,7 @@ const injectEnvToHtml = (): Plugin => {
 const parseEnvFile = (): Record<string, string> => {
   let filePathEnv
   try {
-    filePathEnv = path.resolve(process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env')
-    // filePathEnv = path.resolve(process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development')
+    filePathEnv = path.resolve('./server/.env')
     if (!filePathEnv) {
       console.error('Env file not found')
       return {}
