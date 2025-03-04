@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Navigate, Routes, Route, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import type { FC, JSX } from 'react'
 import StartPage from './components/StartPage'
@@ -13,6 +13,15 @@ import { Theme } from './types/general.types'
 import './utils/config'
 
 const App: FC = (): JSX.Element => {
+  return (
+    <Router>
+      <RoutesWrapper />
+    </Router>
+  )
+}
+
+const RoutesWrapper: FC = (): JSX.Element => {
+  const location = useLocation()
   const [theme, setTheme] = useState<Theme>(Theme.Default)
   // const [userId, setUserId] = useState<number>(0)
   const [loading, setLoading] = useState<boolean>(false)
@@ -31,8 +40,7 @@ const App: FC = (): JSX.Element => {
   }
 
   return (
-    <Router>
-      <Routes>
+      <Routes location={location} key={location.key}>
         <Route path="/" element={<StartPage {...globalProps} />} />
         <Route path="/login" element={<Login {...globalProps} />} />
         <Route path="/register" element={<Register {...globalProps} />} />
@@ -47,7 +55,6 @@ const App: FC = (): JSX.Element => {
         </Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-    </Router>
   )
 }
 
