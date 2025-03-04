@@ -188,7 +188,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
         type: 'success',
         visible: true,
       })
-      console.log(articleMode)
+      // console.log(articleMode)
       // TODO: is this needed?
       // Change mode to Show
       // setArticleMode(Mode.Show)
