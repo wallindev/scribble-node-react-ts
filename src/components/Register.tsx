@@ -27,7 +27,7 @@ const Register: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
       const response: AxiosResponse = await axios.post('/register', { firstName, lastName, email, password, passwordConfirm })
       // const { newUser, userId, jwtToken } = response.data
       const { userId, jwtToken } = response.data
-      login(jwtToken, userId)
+      login(userId, jwtToken)
     } catch (e) {
       if (isAxiosError(e)) {
         error = e as AxiosError
