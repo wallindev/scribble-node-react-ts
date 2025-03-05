@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios, { isAxiosError } from 'axios'
 import type { ChangeEvent, FC, JSX, KeyboardEvent, KeyboardEventHandler } from 'react'
@@ -14,15 +14,22 @@ import { login } from '../utils/functions'
 
 const Login: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
   const navigate = useNavigate()
+  const inputEmailRef = useRef<HTMLInputElement>(null)
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [flashMessage, setFlashMessage] = useState<TFlashMessage>(defaultFlashMessage)
+
+  useEffect(() => {
+    (inputEmailRef.current as HTMLInputElement).focus()
+  }, [])
 
   const handleLogin = async () => {
     let error
     try {
       const response: AxiosResponse = await axios.post('/login', { email, password })
       const { userId, jwtToken } = response.data
+      // console.log('userId:', userId)
+      // console.log('jwtToken:', jwtToken)
       login(userId, jwtToken)
     } catch (e) {
       if (isAxiosError(e))  {
@@ -80,6 +87,7 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
             name="email"
             type="email"
             value={email}
+            ref={inputEmailRef}
             className="w-full sm:w-8/10 inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 text-xl mb-4 border-0 outline-0"
             onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
             onKeyDown={keyDownOnElement}
