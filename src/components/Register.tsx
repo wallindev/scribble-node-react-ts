@@ -33,14 +33,14 @@ const Register: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
         error = e as AxiosError
         consoleError(error)
         setFlashMessage({
-          message: 'An error occured trying to log in',
+          message: 'An error occured trying to register',
           type: 'error',
           visible: true,
         })
       } else {
-        console.error("Error trying to log in:\n", error)
+        console.error("Error trying to register:\n", error)
         setFlashMessage({
-          message: `Error trying to log in:<br />${error}`,
+          message: `Error trying to register:<br />${error}`,
           type: 'error',
           visible: true,
         })
