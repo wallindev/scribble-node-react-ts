@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios, { isAxiosError } from 'axios'
+import axios, { /* HttpStatusCode,  */isAxiosError } from 'axios'
 import type { FC, JSX } from 'react'
 import type { AxiosError, AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
@@ -8,7 +8,7 @@ import CustomButton from './shared/CustomButton'
 import FlashMessage from './shared/FlashMessage'
 import TextLink from './shared/TextLink'
 import type { TArticle, IGlobal, TFlashMessage } from '../types/general.types'
-import { consoleError, dismissFlashMessage, getToken } from '../utils/functions'
+import { consoleError, dismissFlashMessage, getToken, localDateStr, logout } from '../utils/functions'
 import { defaultFlashMessage } from '../utils/defaults'
 
 const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Element => {
@@ -16,19 +16,58 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.El
   const [articles, setArticles] = useState<TArticle[]>([])
   const [flashMessage, setFlashMessage] = useState<TFlashMessage>(defaultFlashMessage)
 
+  // Load articles
   useEffect(() => {
     !(async (): Promise<void> => {
       setLoading!(true)
+      let error
       try {
         const response: AxiosResponse = await axios.get('/articles', {
           headers: {
             Authorization: `Bearer ${getToken()}`
           }
         })
-        // console.log(response.data)
         setArticles(response.data)
-      } catch (error) {
-        console.error('Error fetching articles:', error)
+      } catch (e) {
+        if (isAxiosError(e)) {
+          error = e as AxiosError
+          console.error(`Error fetching articles: ${error}`)
+          const nestedError = (error.response as AxiosResponse)?.data?.error
+          // console.log('error.name:', nestedError.name)
+          // console.log('error.message:', nestedError.message)
+          // console.log('error.stack:', nestedError.stack)
+          // console.error('nestedError:', nestedError)
+          if (nestedError?.name === 'TokenExpiredError') {
+            // console.error('[Nested] TokenExpiredError: Token expired:', nestedError || '')
+            console.log('nestedError.name:', nestedError.name)
+            console.log('nestedError.message:', nestedError.message)
+            console.log('nestedError.expiredAt:', localDateStr(nestedError.expiredAt))
+            setFlashMessage({
+              message: 'Session has expired. Logging out...',
+              type: 'warning',
+              visible: true,
+            })
+            setTimeout(() => {
+              logout()
+              setFlashMessage(defaultFlashMessage)
+              navigate('/')
+            }, 3000)
+          } else if (nestedError?.name === 'JsonWebTokenError') {
+            console.error('[Nested] JsonWebTokenError: Token malformed:', nestedError || '')
+            setFlashMessage({
+              message: 'Session verification failed. Try logging out and in again.',
+              type: 'warning',
+              visible: true,
+            })
+          } else {
+            console.error('Unknown error:', nestedError || '')
+            setFlashMessage({
+              message: 'Session unexpectedly ended. Try logging out and in again.',
+              type: 'warning',
+              visible: true,
+            })
+          }
+        }
       } finally {
         // To mock slow network
         // setTimeout(() => {
@@ -36,21 +75,18 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.El
         // }, 5000)
       }
     })()
-  }, [])
+  }, [articles.length])
 
   const deleteArticle = async (artcl: TArticle): Promise<void> => {
     if (confirm(`Do you really want to delete article '${artcl.title}'`)) {
       let error
       try {
-        const response: AxiosResponse = await axios.delete(`${'/articles'}/${artcl.id}`/* , {
+        const response: AxiosResponse = await axios.delete(`${'/articles'}/${artcl.id}`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${getToken()}`,
           },
-        } */)
-        // console.log('response.data:', response.data)
-        const deletedArticle = response.data
-        const newArticles = articles.filter(article => article.id !== deletedArticle.id)
-        setArticles(newArticles)
+        })
+        setArticles(response.data)
       } catch (e) {
         if (isAxiosError(e))  {
           error = e as AxiosError
@@ -71,17 +107,18 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.El
           })
         }
       }
+
       if (!error) {
         setFlashMessage({
           message: 'Article removed successfully',
           type: 'success',
           visible: true,
         })
-        console.log('Deleted article', artcl.id)
         // To mock slow network
-        // setTimeout(() => {
-          setLoading!(false)
-        // }, 5000)
+        setTimeout(() => {
+          setFlashMessage(defaultFlashMessage)
+          // setLoading!(false)
+        }, 3000)
       }
     }
   }
