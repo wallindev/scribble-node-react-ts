@@ -9,7 +9,7 @@ import FlashMessage from './shared/FlashMessage'
 import { Mode } from '../types/general.types'
 import type { IGlobal, Mode as TMode, TFlashMessage, TArticle } from '../types/general.types'
 import { consoleError, dismissFlashMessage, getToken, getUserId, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
-import { defaultArticle, defaultFlashMessage, defaultContentText, defaultTitleText  } from '../utils/defaults'
+import { defaultArticle, defaultFlashMessage, defaultContentText, defaultTitleText } from '../utils/defaults'
 
 // import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect'
 
@@ -51,16 +51,16 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
           setLoading!(true)
           let error
           try {
-            const response: AxiosResponse = await axios.get(`/articles/${params.id}`/* , {
+            const response: AxiosResponse = await axios.get(`/articles/${params.id}`, {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${getToken()}`,
               },
-            } */)
+            })
             if (response.status === 200 && response.data) {
               setArticle(response.data)
             }
           } catch (e) {
-            if (isAxiosError(e))  {
+            if (isAxiosError(e)) {
               error = e as AxiosError
               consoleError(error)
               switch (error.status) {
@@ -89,7 +89,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
           } finally {
             // To mock slow network
             // setTimeout(() => {
-              setLoading!(false)
+            setLoading!(false)
             // }, 5000)
           }
         })()
@@ -104,7 +104,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
       content: (divContentRef.current as HTMLDivElement).innerText,
       created: articleMode === Mode.Edit ? null : localDateStr(),
       modified: localDateStr(),
-      userId: getUserId() as number
+      userId: getUserId()
     }
     // console.log('articleData: ', articleData)
 
@@ -116,11 +116,17 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
     let error
     try {
       // console.log('params.id:', params.id)
-      const response: AxiosResponse = await axios.patch(`/articles/${params.id}`, artcl)
+      const response: AxiosResponse = await axios.patch(`/articles/${params.id}`, artcl, {
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      })
       // console.log('response.data:', response.data)
-      setArticle(response.data)
+      if (response.data) {
+        setArticle(response.data)
+      }
     } catch (e) {
-      if (isAxiosError(e))  {
+      if (isAxiosError(e)) {
         error = e as AxiosError
         consoleError(error)
         setFlashMessage({
@@ -144,14 +150,16 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
         type: 'success',
         visible: true,
       })
-      // Remove querystring, so '/articles/:id?edit' becomes '/articles/:id'
-      setSearchParams('', {preventScrollReset: true})
+      setTimeout(() => {
+        // Remove querystring, so '/articles/:id?edit' becomes '/articles/:id'
+        setSearchParams('')
+      }, 3000)
     }
   }
 
   // Store new Article (POST)
   const storeArticle = async (artcl: TArticle): Promise<void> => {
-    let error
+    let error, newArticleId: number
     try {
       // console.log('params.id:', params.id)
       const response: AxiosResponse = await axios.post('/articles', artcl, {
@@ -160,10 +168,12 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
         }
       })
       // console.log('response.data:', response.data)
-      setArticle(response.data)
-      navigate(`/articles/${response.data.id}`)
+      if (response.data) {
+        setArticle(response.data)
+        newArticleId = response.data.id
+      }
     } catch (e) {
-      if (isAxiosError(e))  {
+      if (isAxiosError(e)) {
         error = e as AxiosError
         consoleError(error)
         console.error('Error saving article:', error)
@@ -184,10 +194,13 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
     }
     if (!error) {
       setFlashMessage({
-        message: 'Article saved successfully',
+        message: 'Article created successfully',
         type: 'success',
         visible: true,
       })
+      setTimeout(() => {
+        navigate(`/articles/${newArticleId}`)
+      }, 3000)
       // console.log(articleMode)
       // TODO: is this needed?
       // Change mode to Show
@@ -221,37 +234,37 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
           />
         )}
         {/* article.title && article.content ? <> */}
-          <h3 className="text-2xl font-bold mb-4">{articleMode === Mode.Edit ? 'Edit ' : articleMode === Mode.New ? 'New ' : ''}Article</h3>
-          <div
-            ref={divTitleRef}
-            className={`${articleMode !== Mode.Show ? 'inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 ' : ''}block text-2xl mb-4`}
-            dangerouslySetInnerHTML={{ __html: article.title }}
-            contentEditable={articleMode !== Mode.Show ? true : false}
-            onFocus={(e: FocusEvent<HTMLDivElement>) => {articleMode === Mode.New ? selectElementText(e.target, defaultTitleText) : undefined}}
-            onKeyDown={keyDownOnElement}
-          />
-          <div
-            ref={divContentRef}
-            className={`${articleMode !== Mode.Show ? 'inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 ' : ''}min-h-32 block mt-2 mb-4`}
-            dangerouslySetInnerHTML={{ __html: replaceNewlinesWithBr(article.content) }}
-            contentEditable={articleMode !== Mode.Show ? true : false}
-            onFocus={(e: FocusEvent<HTMLDivElement>) => {articleMode === Mode.New ? selectElementText(e.target, defaultContentText) : undefined}}
-          />
-          <div className="flex justify-between items-center mb-4 text-xs">
-            <div>Created: {localDateStr(article.created)}</div>
-            <div>Modified: {localDateStr(article.modified)}</div>
-          </div>
-          {articleMode === Mode.Show ? (
-            <>
-              <CustomButton onClick={() => navigate('/articles')} className="mr-4">&laquo; All Articles</CustomButton>
-              <CustomButton onClick={() => navigate('?edit')}>Edit</CustomButton>
-            </>
-          ) : (
-            <>
-              <CustomButton type="button" onClick={() => articleMode === Mode.Edit ? navigate(`/articles/${params.id}`) : navigate('/articles')}>&laquo; Cancel</CustomButton>
-              <CustomButton type="submit" onClick={saveArticle} className="ml-4">{articleMode === Mode.Edit ? 'Update' : 'Save'}</CustomButton>
-            </>
-          )}
+        <h3 className="text-2xl font-bold mb-4">{articleMode === Mode.Edit ? 'Edit ' : articleMode === Mode.New ? 'New ' : ''}Article</h3>
+        <div
+          ref={divTitleRef}
+          className={`${articleMode !== Mode.Show ? 'inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 ' : ''}block text-2xl mb-4`}
+          dangerouslySetInnerHTML={{ __html: article.title }}
+          contentEditable={articleMode !== Mode.Show ? true : false}
+          onFocus={(e: FocusEvent<HTMLDivElement>) => { articleMode === Mode.New ? selectElementText(e.target, defaultTitleText) : undefined }}
+          onKeyDown={keyDownOnElement}
+        />
+        <div
+          ref={divContentRef}
+          className={`${articleMode !== Mode.Show ? 'inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 ' : ''}min-h-32 block mt-2 mb-4`}
+          dangerouslySetInnerHTML={{ __html: replaceNewlinesWithBr(article.content) }}
+          contentEditable={articleMode !== Mode.Show ? true : false}
+          onFocus={(e: FocusEvent<HTMLDivElement>) => { articleMode === Mode.New ? selectElementText(e.target, defaultContentText) : undefined }}
+        />
+        <div className="flex justify-between items-center mb-4 text-xs">
+          <div>Created: {localDateStr(article.created)}</div>
+          <div>Modified: {localDateStr(article.modified)}</div>
+        </div>
+        {articleMode === Mode.Show ? (
+          <>
+            <CustomButton onClick={() => navigate('/articles')} className="mr-4">&laquo; All Articles</CustomButton>
+            <CustomButton onClick={() => navigate('?edit')}>Edit</CustomButton>
+          </>
+        ) : (
+          <>
+            <CustomButton type="button" onClick={() => articleMode === Mode.Edit ? navigate(`/articles/${params.id}`) : navigate('/articles')}>&laquo; Cancel</CustomButton>
+            <CustomButton type="submit" onClick={saveArticle} className="ml-4">{articleMode === Mode.Edit ? 'Update' : 'Save'}</CustomButton>
+          </>
+        )}
         {/* </> : <CustomButton onClick={() => navigate('/articles')} className="mr-4">&laquo; All Articles</CustomButton> */}
       </div>
     </Layout>
