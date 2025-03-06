@@ -34,7 +34,7 @@ export type TArticle = {
   content: string
   created: string | null
   modified: string
-  userId: number
+  userId: number | null
 }
 
 export type TUser = {
