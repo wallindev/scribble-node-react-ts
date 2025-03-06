@@ -9,7 +9,7 @@ import CustomButton from './shared/CustomButton'
 import FlashMessage from './shared/FlashMessage'
 import { Mode } from '../types/general.types'
 import type { IGlobal, Mode as TMode, TFlashMessage, TUser } from '../types/general.types'
-import { consoleError, dismissFlashMessage, getUserId, localDateStr, selectElementText } from '../utils/functions'
+import { consoleError, dismissFlashMessage, getToken, getUserId, localDateStr, selectElementText } from '../utils/functions'
 import { defaultFlashMessage, defaultUser } from '../utils/defaults'
 
 // import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect'
@@ -45,11 +45,11 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Elemen
       !(async () => {
         setLoading!(true)
         try {
-          const response: AxiosResponse = await axios.get(`/users/${user.id}`/* , {
+          const response: AxiosResponse = await axios.get(`/users/${user.id}`, {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+              Authorization: `Bearer ${getToken()}`,
             },
-          } */)
+          })
           if (response.status === 200 && response.data) {
             // console.log('response.data:', response.data)
             setUser(response.data)
@@ -104,14 +104,19 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Elemen
       modified: localDateStr(),
     }
     // console.log('userData: ', userData)
-    userMode === Mode.Edit ? updateUser(userData) : storeUser(userData)
+    updateUser(userData)
+    // userMode === Mode.Edit ? updateUser(userData) : storeUser(userData)
   }
 
   // Update existing User (PATCH). Partial<User> because of the PATCH partial update.
   const updateUser = async (usr: Partial<TUser>) => {
     let error
     try {
-      const response: AxiosResponse = await axios.patch(`/users/${usr.id}`, usr)
+      const response: AxiosResponse = await axios.patch(`/users/${usr.id}`, usr, {
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      })
       setUser(response.data)
     } catch (e) {
       if (isAxiosError(e))  {
@@ -138,14 +143,15 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Elemen
         type: 'success',
         visible: true,
       })
-      // Remove querystring, so '/profile?edit' becomes '/profile'
-      setSearchParams('', {preventScrollReset: true})
+      setTimeout(() => {
+        // Remove querystring, so '/profile?edit' becomes '/profile'
+        setSearchParams('')
+      }, 3000)
     }
   }
 
   // Store new User (POST)
-  const storeUser = async (usr: TUser): Promise<void> => {
-    return
+  /* const storeUser = async (usr: TUser): Promise<void> => {
     let error
     try {
       const response: AxiosResponse = await axios.post('/users', usr)
@@ -181,7 +187,7 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Elemen
       // Change mode to Show
       // setUserMode(Mode.Show)
     }
-  }
+  } */
 
   const keyDownOnElement: KeyboardEventHandler = (key: KeyboardEvent<HTMLInputElement>) => {
     if (key.code.toUpperCase() === 'ENTER' || key.code.toUpperCase() === 'NUMPADENTER') {
