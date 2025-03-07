@@ -13,7 +13,7 @@ export default ({ mode = 'development' }) => {
   }
 
   return defineConfig({
-    /* mode: mode || 'development', */
+    mode: mode || 'development',
     plugins: [
       react(),
       tailwindCss(),
@@ -21,12 +21,16 @@ export default ({ mode = 'development' }) => {
     ],
     server: {
       // hmr: false,
-      // host: 'localhost', // 0.0.0.0 for all interfaces
-      port: 5002,
-      /* allowedHosts: [
+      host: 'localhost', // 0.0.0.0 for all interfaces
+      port: 5000,
+      allowedHosts: [
         '127.0.0.1',
-        'localhost',
-      ], */
+        '192.168.32.2',
+        'grunge',
+        'grungecorp',
+        'grunge.dev',
+        'grungecorp.dev',
+      ],
       watch: {
         ignored: ['**/api-data/*.*', './TODO.txt'],
       },
