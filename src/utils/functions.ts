@@ -44,13 +44,6 @@ export const dismissFlashMessage = (
 // Short-form of process.env.KEY
 export const env = (key: string) => process.env[key]
 
-// Helper function to check authentication status
-export const isAuthenticated = (): boolean => {
-  // TODO: Change this to localStorage.getItem('token')
-  // when full authentication is implemented
-  return localStorage.getItem('AUTHENTICATED') === 'true' && hasUserId()
-}
-
 export const login = (userId: number, token: string): void => {
   setAuth(true)
   setUserId(userId)
@@ -61,6 +54,13 @@ export const logout = (): void => {
   setAuth(false)
   removeUserId()
   removeToken()
+}
+
+// Helper function to check authentication status
+export const isAuthenticated = (): boolean => {
+  // TODO: Change this to localStorage.getItem('token')
+  // when full authentication is implemented
+  return localStorage.getItem('AUTHENTICATED') === 'true' && hasUserId() && hasToken()
 }
 
 export const setAuth = (authenticated: boolean): void => {
@@ -76,12 +76,16 @@ export const getUserId = (): number | null => {
   }
 }
 
-export const hasUserId = (): boolean => {
-  return localStorage.getItem('userId') !== null
-}
-
 export const setUserId = (userId: number): void => {
   localStorage.setItem('userId', userId.toString())
+}
+
+export const removeUserId = (): void => {
+  localStorage.removeItem('userId')
+}
+
+export const hasUserId = (): boolean => {
+  return localStorage.getItem('userId') !== null
 }
 
 export const getToken = (): string | null => {
@@ -96,13 +100,13 @@ export const removeToken = (): void => {
   localStorage.removeItem('token')
 }
 
-export const removeUserId = (): void => {
-  localStorage.removeItem('userId')
+export const hasToken = (): boolean => {
+  return localStorage.getItem('token') !== null
 }
 
 export const localDateStr = (dateStr?: string | null): string => {
   const date = dateStr ? new Date(dateStr) : new Date()
-  return date.toLocaleString("sv-SE", { timeZone: "CET" })
+  return date.toLocaleString("sv-SE", { timeZone: "Europe/Stockholm" })
 }
 
 // console.log with console.error styling
