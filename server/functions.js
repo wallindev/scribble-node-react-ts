@@ -1,11 +1,14 @@
 import { scrypt, randomBytes, timingSafeEqual } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { existsSync as fileExists } from 'node:fs'
-import { join as pathJoin } from 'node:path'
-import { promisify as nodePromisify } from 'node:util'
+import { join } from 'node:path'
+import { promisify } from 'node:util'
 import mime from 'mime/lite'
 import jwt from 'jsonwebtoken'
-const scryptAsync = nodePromisify(scrypt)
+const scryptAsync = promisify(scrypt)
+const decodeJwtSync = jwt.decode
+const signJwtAsync = promisify(jwt.sign)
+const verifyJwtAsync = promisify(jwt.verify)
 import { __filename, __dirname } from './constants.js'
 
 /*
@@ -41,30 +44,58 @@ export const comparePassword = async (password, dbPassword, dbSalt) => {
   }
 }
 
-// Use httpOnly and secure cookies in next version!
-export const generateToken = (userId) => {
-  // const secretKey = process.env.JWT_SECRET
-  // const secretKey = env('JWT_SECRET')
-  const token = jwt.sign({ userId }, env('JWT_SECRET'), { expiresIn: '1h' })
-  return token
+export const secretKey = randomBytes(32).toString('hex') // 32 bytes = 256 bits
+
+// Use httpOnly and secure cookies instead of localStorage
+// in next version of this JWT handling!
+
+export const decodeJwtToken = (token, secret) => {
+  try {
+    return decodeJwtSync(token, secret)
+  } catch (err) {
+    throw err
+  }
 }
 
-export const secretKey = randomBytes(32).toString('hex') // 32 bytes = 256 bits
+export const signJwtToken = async (payload, secret, options = {}) => {
+  try {
+    return await signJwtAsync(payload, secret, options)
+  } catch (err) {
+    throw err
+  }
+}
+
+export const verifyJwtToken = async (token, secret) => {
+  try {
+    return await verifyJwtAsync(token, secret)
+  } catch (err) {
+    throw err
+  }
+}
+
+export const readToken = (token) =>
+  decodeJwtToken(token, env('JWT_SECRET'))
+
+export const generateToken = async (userId) =>
+  await signJwtToken({ userId }, env('JWT_SECRET'), { expiresIn: '1h' })
+
+export const validateToken = async (token) =>
+  await verifyJwtToken(token, env('JWT_SECRET'))
 
 /*
  * General functions
  */
 
 // Short-form of process.env.KEY
-export const env = (key) => process.env[key]
+export const env = (key) => process.env[key] || null
 
 export const localDateStr = (dateStr) => {
   const date = dateStr ? new Date(dateStr) : new Date()
-  return date.toLocaleString('sv-SE', { timeZone: 'CET' })
+  return date.toLocaleString('sv-SE', { timeZone: 'Europe/Stockholm' })
 }
 
 export const imgToBase64 = async (relPathToImg) => {
-  const filePath = pathJoin(__dirname, relPathToImg)
+  const filePath = join(__dirname, relPathToImg)
   if (!fileExists(filePath)) throw new Error("File doesn't exist")
   // console.log('filePath:', filePath)
 
