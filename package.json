@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "start": "cross-env NODE_ENV=production node server",
-    "api": "cross-env NODE_ENV=development nodemon --ignore ./api-data/db.json server",
-    "dev": "cross-env NODE_ENV=development vite --host",
+    "start-local": "cross-env NODE_ENV=production RUN_ENV=local node server",
+    "api": "cross-env NODE_ENV=development RUN_ENV=local nodemon --ignore ./api-data/db.json server",
+    "dev": "cross-env NODE_ENV=development RUN_ENV=local vite --host",
     "tw": "npx @tailwindcss/cli -i ./src/assets/css/index.tailwind.css -o ./public/css/index.css",
-    "dev-api": "npx concurrently -c '#fdba74,#93c5fd' 'npm run api' 'npm run dev' --names=API,Vite",
+    "api-dev": "npx concurrently -c '#fdba74,#93c5fd' 'npm run api' 'npm run dev' --names=API,Vite",
     "build": "cross-env NODE_ENV=production npm run tw && vite build",
+    "build-local": "cross-env NODE_ENV=production RUN_ENV=local npm run tw && vite build",
     "sync-deps": "npm prune && npm i",
     "sync-deps-exact": "npm prune && npm ci"
   },
