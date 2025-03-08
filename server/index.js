@@ -1,4 +1,4 @@
-import path from 'node:path'
+import { join, resolve } from 'node:path'
 import express from 'express'
 import cors from 'cors'
 import jwt from 'jsonwebtoken'
@@ -6,19 +6,40 @@ import { existsSync as fileExists } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { HttpStatusCode } from 'axios'
 import { JSONFilePreset } from 'lowdb/node'
-import 'dotenv/config'
-import { __filename, __dirname } from './constants.js'
-import { env, generateToken, getMaxId, localDateStr, hashPassword, comparePassword } from './functions.js'
-import './config.js'
+import envFileVars, { PROD_ENV } from './config.js'
+import { __dirname } from './constants.js'
+import { comparePassword, env, generateToken, getMaxId, hashPassword, localDateStr, readToken, validateToken } from './functions.js'
+// import './config.js'
 
+// Directories and files
+const BUILD_DIR = 'dist'
+const buildPath = join(__dirname, '../', BUILD_DIR)
+const indexHtmlPath = join(__dirname, '../', PROD_ENV ? BUILD_DIR : '', 'index.html')
+console.log('\nbuildPath: ', buildPath)
+console.log('indexHtmlPath: ', indexHtmlPath)
+const dbFilePath = resolve(env('DB_PATH') || process.env.DB_PATH)
+console.log('dbFilePath: ', dbFilePath)
+
+// Express Server
 const app = express()
+
+// Middleware
 app.use(cors())
 app.use(express.json())
 
+// API Router
+const api = express.Router()
+app.use('/api', api)
+
+// Static files
+app.use(express.static(buildPath))
+
 // Read db to memory
-const filePath = path.resolve(env('DB_PATH'))
-const db = await JSONFilePreset(filePath, { articles: [], users: [], tokens: [] })
-const apiRoot = '/api'
+const db = await JSONFilePreset(dbFilePath, { articles: [], users: [], tokens: [] })
+// console.log('db: ', db)
+// console.log('db.data: ', db.data)
+
+// const apiRoot = '/api'
 const onlyDigits = '([0-9]+)'
 
 /*
@@ -26,52 +47,91 @@ const onlyDigits = '([0-9]+)'
  *
  */
 
+// Authentication middleware
+const authenticate = async (req, res, next) => {
+  const authHeader = req.headers.authorization
+  if (!authHeader) return res.status(HttpStatusCode.Unauthorized).json({ message: 'Unauthorized' })
+  const token = authHeader.split(' ')[1]
+
+  try {
+    const tokenData = readToken(token)
+    console.log('Token Data:', tokenData)
+    // TODO: Must change 'token' to token below!!
+    // This is just a test of malforming the token!
+    const decoded = await validateToken(token)
+    const { userId, iat, exp } = decoded
+    console.log('\nToken is valid:', decoded)
+    console.log('\nToken data')
+    console.log('------------')
+    console.log('User id:', userId)
+    console.log('Issued:', localDateStr(new Date(iat * 1000)))
+    console.log('Expiry:', localDateStr(new Date(exp * 1000)))
+    req.user = decoded
+    next()
+  } catch (error) {
+    // console.log('error.name:', error.name)
+    // console.log('error.message:', error.message)
+    // console.log('error.stack:', error.stack)
+    if (error.name === 'TokenExpiredError') {
+      console.log('Token has expired:', error.message)
+    } else if (error.name === 'JsonWebTokenError') {
+      console.error('Token verification failed:', error.message)
+    } else {
+      console.error('Unexpected JWT Error:', error.message)
+    }
+    return res.status(HttpStatusCode.Unauthorized).json({ error })
+  }
+}
+
+/*
+ * Default params and other request data
+ *
+ */
+
 // Default article id param check
-app.use(`${apiRoot}/articles/:id${onlyDigits}`, (req, res, next) => {
+api.use(`/articles/:id${onlyDigits}`, authenticate, (req, res, next) => {
   if (!Number.isInteger(Number(req.params.id)))
-    return res.status(400).json({ message: 'Invalid article ID' })
+    return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid Article Id' })
   next()
 })
 
 // Default user id param check
-app.use([`${apiRoot}/users/:id${onlyDigits}`, `${apiRoot}/profile/:id${onlyDigits}`], (req, res, next) => {
+api.use([`/users/:id${onlyDigits}`/* , `/profile/:id${onlyDigits}` */], authenticate, (req, res, next) => {
   if (!Number.isInteger(Number(req.params.id)))
-    return res.status(400).json({ message: 'Invalid user ID' })
+    return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid User Id' })
   next()
 })
 
-// Authentication middleware
-const authenticate = (req, res, next) => {
-  const authHeader = req.headers.authorization
-  console.log('authHeader:', authHeader)
-  if (!authHeader) return res.status(401).json({ message: 'Unauthorized' })
-  const token = authHeader.split(' ')[1]
-  try {
-    const decoded = jwt.verify(token, env('JWT_SECRET'))
-    req.user = decoded // Attach user data to request
-    next()
-  } catch (err) {
-    console.error('jwt token error:', err)
-    return res.status(401).json({ message: 'Unauthorized' })
+// User id on protected resources
+api.use(['/articles'/* , '/profile' */], authenticate, (req, res, next) => {
+  // console.log('\nreq.user?.userId:', req.user?.userId)
+  if (!req.user?.userId) {
+    // TODO: Check this, using jwt directly like below can cause unexpected problems!
+    // const error = new jwt.TokenExpiredError('User Id Missing: Token Expired', new Date())
+    return res.status(HttpStatusCode.Unauthorized).json({ message: 'userId missing' })
   }
-}
-/* Error handlers
+  next()
+})
+
+/*
+ * Error handlers
  *
  */
+
 // To print with color in terminal
 // console.log('\x1b[1m\x1b[31mAxios Error data:\x1b[0m')
-app.use((err, req, res, next) => {
+/* api.use((err, req, res, next) => {
   if (err instanceof NotFoundError) {
     return res.status(err.statusCode).json({ message: err.message })
   }
 
   // Handle other errors
   console.error(err)
-  res.status(500).json({ message: 'Internal server error' })
-})
+  res.status(HttpStatusCode.InternalServerError).json({ message: 'Internal server error' })
+}) */
 
-app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500
+/* api.use((err, req, res, next) => {
+  const statusCode = HttpStatusCode[err.statusCode] || HttpStatusCode.InternalServerError
   const message = err.message || 'Internal server error'
 
   res.status(statusCode).json({
@@ -82,10 +142,10 @@ app.use((err, req, res, next) => {
       details: err.details, // If you have any additional error details
     },
   })
-})
+}) */
 
 // All Articles
-app.get(`${apiRoot}/articles`, authenticate, async (req, res, next) => {
+api.get('/articles', async (req, res, next) => {
   await db.read()
   if (!db.data.articles) return res.status(HttpStatusCode.NotFound).json({ message: 'No Articles found' })
   const articles = db.data.articles.filter(article => article.userId === req.user.userId)
@@ -94,23 +154,15 @@ app.get(`${apiRoot}/articles`, authenticate, async (req, res, next) => {
 })
 
 // One Article
-app.get(`${apiRoot}/articles/:id${onlyDigits}`, async (req, res, next) => {
+api.get(`/articles/:id${onlyDigits}`, async (req, res, next) => {
   await db.read()
   const article = db.data.articles.find(a => a.id === req.params.id)
   if (!article) return res.status(HttpStatusCode.NotFound).json({ message: 'Article not found' })
   res.status(HttpStatusCode.Ok).json(article)
 })
 
-// One User
-app.get([`${apiRoot}/users/:id${onlyDigits}`, `/profile/:id${onlyDigits}`], async (req, res, next) => {
-  await db.read()
-  const user = db.data.users.find(u => u.id === req.params.id)
-  if (!user) return res.status(HttpStatusCode.NotFound).json({ message: 'Article not found' })
-  res.status(HttpStatusCode.Ok).json(user)
-})
-
 // Update Article
-app.patch(`${apiRoot}/articles/:id${onlyDigits}`, async (req, res, next) => {
+api.patch(`/articles/:id${onlyDigits}`, async (req, res, next) => {
   let { title, content } = req.body
   title = title.replace(/\r\n|\r|\n/g, '')
   const modified = localDateStr()
@@ -129,18 +181,15 @@ app.patch(`${apiRoot}/articles/:id${onlyDigits}`, async (req, res, next) => {
     await db.write()
   } catch (error) {
     console.error("Error updating article:\n", error)
-    res.status(500).json({ message: 'Internal server error' })
+    res.status(HttpStatusCode.InternalServerError).json({ message: 'Internal server error' })
   }
   res.status(HttpStatusCode.Ok).json(db.data.articles[articlesIndex])
 })
 
 // Store new Article
-app.post(`${apiRoot}/articles`, authenticate, async (req, res, next) => {
+api.post('/articles', authenticate, async (req, res, next) => {
   const { title, content } = req.body
-  if (!title || !content) return res.status(400).json({ message: 'Invalid article data' })
-
-  console.log('title:', title)
-  console.log('content:', content)
+  if (!title || !content) return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid article data' })
 
   // Build new Article
   const newId = await getMaxId(db, 'articles') + 1
@@ -155,8 +204,6 @@ app.post(`${apiRoot}/articles`, authenticate, async (req, res, next) => {
     userId: req.user.userId
   }
 
-  console.log('New Article:', newArticle)
-
   // Insert into db and return to client
   try {
     await db.read()
@@ -164,29 +211,37 @@ app.post(`${apiRoot}/articles`, authenticate, async (req, res, next) => {
     res.status(HttpStatusCode.Created).json(newArticle)
   } catch (error) {
     console.error("Error creating article:\n", error)
-    res.status(500).json({ message: 'Internal server error' })
+    res.status(HttpStatusCode.InternalServerError).json({ message: 'Internal server error' })
   }
 })
 
 // Delete Article
-app.delete(`${apiRoot}/articles/:id${onlyDigits}`, async (req, res) => {
+api.delete(`/articles/:id${onlyDigits}`, async (req, res) => {
   const articlesIndex = db.data.articles.findIndex(article => article.id === req.params.id)
   if (articlesIndex === -1) return res.status(HttpStatusCode.NotFound).json({ message: 'Article not found' })
 
   // Remove article from db
   try {
     await db.read()
-    db.data.articles.splice(articlesIndex)
+    db.data.articles.splice(articlesIndex, 1)
     await db.write()
   } catch (error) {
     console.error("Error removing article:\n", error)
-    res.status(500).json({ message: 'Internal server error' })
+    res.status(HttpStatusCode.InternalServerError).json({ message: 'Internal server error' })
   }
   res.status(HttpStatusCode.Ok).json(db.data.articles)
 })
 
+// One User
+api.get([`/users/:id${onlyDigits}`/* , `/profile/:id${onlyDigits}` */], async (req, res, next) => {
+  await db.read()
+  const user = db.data.users.find(u => u.id === req.params.id)
+  if (!user) return res.status(HttpStatusCode.NotFound).json({ message: 'Article not found' })
+  res.status(HttpStatusCode.Ok).json(user)
+})
+
 // Update User
-app.patch(`${apiRoot}/users/:id${onlyDigits}`, async (req, res, next) => {
+api.patch(`/users/:id${onlyDigits}`, async (req, res, next) => {
   let { firstName, lastName, email } = req.body
   const modified = localDateStr()
   if (!firstName || !email || !modified)
@@ -202,42 +257,18 @@ app.patch(`${apiRoot}/users/:id${onlyDigits}`, async (req, res, next) => {
     await db.write()
   } catch (error) {
     console.error("Error updating user:\n", error)
-    res.status(500).json({ message: 'Internal server error' })
+    res.status(HttpStatusCode.InternalServerError).json({ message: 'Internal server error' })
   }
   res.status(HttpStatusCode.Ok).json(db.data.users[usersIndex])
 })
 
-app.post(`${apiRoot}/login`, async (req, res, next) => {
-  const { email, password } = req.body
-  if (!email || !password) return res.status(400).json({ message: 'Invalid user data' })
-  const user = db.data.users.find(u => u.email === email)
-  if (!user || !user.id) res.status(401).json({ message: 'Invalid credentials' })
-
-  const passwordCompare = await comparePassword(password, user.password, user.salt)
-  if (!passwordCompare) res.status(401).json({ message: 'Password compare failed' })
-
-  // Next step, to have a server cookie and handle all
-  // authentication and authorization on the server
-  // const token = jwt.sign({ userId: user.id }, env('JWT_SECRET'), { expiresIn: '1h' })
-  // const token = generateToken(user.id)
-  // res.cookie('authToken', token, {
-  //   httpOnly: true,
-  //   sameSite: 'strict',
-  //   secure: true, // Set to true in production (HTTPS)
-  // })
-
-  const userId = user.id
-  const jwtToken = generateToken(userId)
-  res.json({ userId, jwtToken })
-})
-
-// Register user
-app.post(`${apiRoot}/register`, async (req, res, next) => {
+// Create/Register user
+api.post('/register', async (req, res, next) => {
   const { firstName, lastName, email, password, passwordConfirm } = req.body
   if (!firstName || !lastName || !email || !password || !passwordConfirm)
-    return res.status(400).json({ message: 'Invalid user data' })
+    return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid user data' })
 
-  if (password !== passwordConfirm) return res.status(400).json({ message: 'Passwords not equal' })
+  if (password !== passwordConfirm) return res.status(HttpStatusCode.BadRequest).json({ message: 'Passwords not equal' })
 
   // Build new User
   const newId = await getMaxId(db, 'users') + 1
@@ -264,40 +295,68 @@ app.post(`${apiRoot}/register`, async (req, res, next) => {
     await db.read()
     await db.update(({ users }) => users.push(newUser))
     const userId = newUser.id
-    const jwtToken = generateToken(userId)
+    const jwtToken = await generateToken(userId)
     // res.status(HttpStatusCode.Created).json({ newUser, userId, jwtToken })
     res.status(HttpStatusCode.Created).json({ userId, jwtToken })
   } catch (error) {
     console.error("Error creating user:\n", error)
-    res.status(500).json({ message: 'Internal server error' })
+    res.status(HttpStatusCode.InternalServerError).json({ message: 'Internal server error' })
   }
 })
 
-app.get(`${apiRoot}/verify`, async (req, res, next) => {
+api.post('/login', async (req, res, next) => {
+  const { email, password } = req.body
+  if (!email || !password) return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid user data' })
+  const user = db.data.users.find(u => u.email === email)
+  if (!user || !user.id) res.status(HttpStatusCode.Unauthorized).json({ message: 'Invalid credentials' })
+
+  const passwordCompare = await comparePassword(password, user.password, user.salt)
+  if (!passwordCompare) res.status(HttpStatusCode.Unauthorized).json({ message: 'Password compare failed' })
+
+  // Next step, to have a server cookie and handle all
+  // authentication and authorization on the server
+  // const token = jwt.sign({ userId: user.id }, env('JWT_SECRET'), { expiresIn: '1h' })
+  // const token = generateToken(user.id)
+  // res.cookie('authToken', token, {
+  //   httpOnly: true,
+  //   sameSite: 'strict',
+  //   secure: true, // Set to true in production (HTTPS)
+  // })
+
+  const userId = user.id
+  const jwtToken = await generateToken(userId)
+  // console.log('userId:', userId)
+  // console.log('jwtToken:', jwtToken)
+  res.status(HttpStatusCode.Ok).json({ userId, jwtToken })
 })
 
-// Static files and index.html
-const buildPath = path.join(__dirname, '../', 'dist')
-const indexPath = path.join(buildPath, 'index.html')
+api.get('/verify', async (req, res, next) => {
+})
 
-app.use(express.static(buildPath))
-
-// Serve index.html for all other routes (handle this last)
+// Serve index.html for all other routes on app
 app.get('*', async (req, res) => {
-  let modifiedHtml
+  let modifiedIndexHtml
+  if (!fileExists(indexHtmlPath)) {
+    console.error("Couldn't find index.html")
+    return
+  }
   try {
-    const fl = await readFile(indexPath, 'utf8')
-    modifiedHtml = fl.replace('{{CSS_PATH}}', env('CSS_PATH'))
+    const indexHtml = await readFile(indexHtmlPath, 'utf8')
+    modifiedIndexHtml = indexHtml.replace('{{CSS_PATH}}', env('CSS_PATH'))
   } catch(error) {
     console.error("Error reading index.html:\n", error)
-    return res.status(500).send({ message: 'Error reading index.html', error })
+    return res.status(HttpStatusCode.InternalServerError).send({ message: 'Error reading index.html', error })
   }
-
-  res.send(modifiedHtml)
-  // res.sendFile(indexPath)
+  res.send(modifiedIndexHtml)
+  // res.sendFile(indexHtmlPath)
 })
 
 // Start server
 app.listen(env('PORT'), env('HOST'), () => {
+  console.log('\nenvFileVars:', envFileVars, "\n")
+
+  console.log(`Build env: ${env('NODE_ENV')}`)
+  console.log(`Running env: ${env('RUN_ENV')}\n`)
+
   console.log(`API Server running on ${env('PROTOCOL')}${env('HOST')}:${env('PORT')}`)
 })
