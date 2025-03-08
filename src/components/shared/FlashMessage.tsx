@@ -12,10 +12,10 @@ const FlashMessage: FC<IFlashMessage> = ({ message, type, onDismiss }): JSX.Elem
     const opacityTimer = setTimeout(() => {
       // setIsVisible(true)
       (divRef.current as HTMLDivElement)?.classList?.replace('opacity-0', 'opacity-100')
-    }, 100)
+    }, 1)
 
     return () => clearTimeout(opacityTimer)
-  })
+  }, [])
 
   const colors: { [key: string]: string } = {
     success: 'bg-green-700',

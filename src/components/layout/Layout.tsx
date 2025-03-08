@@ -18,10 +18,10 @@ const Layout: FC<ILayout> = ({ /* loading,  */theme, setTheme, children }): JSX.
     const opacityTimer = setTimeout(() => {
       // setIsVisible(true)
       (divRef.current as HTMLDivElement)?.classList?.replace('opacity-0', 'opacity-100')
-    }, 100)
+    }, 1)
 
     return () => clearTimeout(opacityTimer)
-  })
+  }, [])
 
   return /* loading ? <LoadText /> :  */(
     <div ref={divRef} className="transition-opacity delay-0 duration-700 opacity-0">
