@@ -24,6 +24,6 @@ dist-ssr
 *.sw?
 
 src/assets/fonts/**
-.env*
+.env
 TODO.txt
 *.bak
