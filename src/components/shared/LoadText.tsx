@@ -15,8 +15,8 @@ const LoadText: FC<ILoadText> = ({ defaultText = 'Loading' }): JSX.Element => {
     // giving the content a chance to render and preventing
     // "loading" div from flashing
     const opacityTimer = setTimeout(() => {
-      (textRef.current as HTMLDivElement).classList.replace('opacity-0', 'opacity-100')
-    }, 1)
+      (textRef.current as HTMLDivElement)?.classList?.replace('opacity-0', 'opacity-100')
+    }, 100)
 
     const displayTimer = setInterval(() => {
       setDisplayText(displayText === displayTexts.startText ? displayTexts.endText : displayTexts.startText)
