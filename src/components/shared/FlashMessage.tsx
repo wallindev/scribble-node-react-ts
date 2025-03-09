@@ -11,8 +11,8 @@ const FlashMessage: FC<IFlashMessage> = ({ message, type, onDismiss }): JSX.Elem
     // setIsVisible(false)
     const opacityTimer = setTimeout(() => {
       // setIsVisible(true)
-      (divRef.current as HTMLDivElement).classList.replace('opacity-0', 'opacity-100')
-    }, 1)
+      (divRef.current as HTMLDivElement)?.classList?.replace('opacity-0', 'opacity-100')
+    }, 100)
 
     return () => clearTimeout(opacityTimer)
   })
