@@ -17,8 +17,8 @@ const Layout: FC<ILayout> = ({ /* loading,  */theme, setTheme, children }): JSX.
     // setIsVisible(false)
     const opacityTimer = setTimeout(() => {
       // setIsVisible(true)
-      (divRef.current as HTMLDivElement).classList.replace('opacity-0', 'opacity-100')
-    }, 1)
+      (divRef.current as HTMLDivElement)?.classList?.replace('opacity-0', 'opacity-100')
+    }, 100)
 
     return () => clearTimeout(opacityTimer)
   })
