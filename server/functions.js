@@ -10,7 +10,7 @@ const decodeJwtSync = jwt.decode
 const signJwtAsync = promisify(jwt.sign)
 const verifyJwtAsync = promisify(jwt.verify)
 import { __filename, __dirname } from './constants.js'
-
+import { envFileVars, envConfigVars, IS_LIVE } from './config.js'
 /*
  * DB functions
  */
@@ -74,13 +74,13 @@ export const verifyJwtToken = async (token, secret) => {
 }
 
 export const readToken = (token) =>
-  decodeJwtToken(token, env('JWT_SECRET'))
+  decodeJwtToken(token, IS_LIVE ? envConfigVars.JWT_SECRET : envFileVars.JWT_SECRET)
 
 export const generateToken = async (userId) =>
-  await signJwtToken({ userId }, env('JWT_SECRET'), { expiresIn: '1h' })
+  await signJwtToken({ userId }, IS_LIVE ? envConfigVars.JWT_SECRET : envFileVars.JWT_SECRET, { expiresIn: '1h' })
 
 export const validateToken = async (token) =>
-  await verifyJwtToken(token, env('JWT_SECRET'))
+  await verifyJwtToken(token, IS_LIVE ? envConfigVars.JWT_SECRET : envFileVars.JWT_SECRET)
 
 /*
  * General functions
