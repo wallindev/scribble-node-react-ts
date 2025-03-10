@@ -6,7 +6,7 @@ import { existsSync as fileExists } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { HttpStatusCode } from 'axios'
 import { JSONFilePreset } from 'lowdb/node'
-import envFileVars, { PROD_ENV } from './config.js'
+import { envFileVars, envConfigVars, IS_LIVE, NODE_ENV, RUN_ENV, PROD_ENV } from './config.js'
 import { __dirname } from './constants.js'
 import { comparePassword, env, generateToken, getMaxId, hashPassword, localDateStr, readToken, validateToken } from './functions.js'
 // import './config.js'
@@ -15,9 +15,10 @@ import { comparePassword, env, generateToken, getMaxId, hashPassword, localDateS
 const BUILD_DIR = 'dist'
 const buildPath = join(__dirname, '../', BUILD_DIR)
 const indexHtmlPath = join(__dirname, '../', PROD_ENV ? BUILD_DIR : '', 'index.html')
-console.log('\nbuildPath: ', buildPath)
-console.log('indexHtmlPath: ', indexHtmlPath)
-const dbFilePath = resolve(env('DB_PATH') || process.env.DB_PATH)
+console.log('\nbuildPath:', buildPath)
+console.log('indexHtmlPath:', indexHtmlPath)
+console.log("envConfigVars.DB_PATH:", envConfigVars.DB_PATH)
+const dbFilePath = resolve('./api-data/db.json')
 console.log('dbFilePath: ', dbFilePath)
 
 // Express Server
@@ -342,7 +343,7 @@ app.get('*', async (req, res) => {
   }
   try {
     const indexHtml = await readFile(indexHtmlPath, 'utf8')
-    modifiedIndexHtml = indexHtml.replace('{{CSS_PATH}}', env('CSS_PATH'))
+    modifiedIndexHtml = indexHtml.replace('{{CSS_PATH}}', envConfigVars.CSS_PATH)
   } catch(error) {
     console.error("Error reading index.html:\n", error)
     return res.status(HttpStatusCode.InternalServerError).send({ message: 'Error reading index.html', error })
@@ -352,11 +353,15 @@ app.get('*', async (req, res) => {
 })
 
 // Start server
-app.listen(env('PORT'), env('HOST'), () => {
-  console.log('\nenvFileVars:', envFileVars, "\n")
+app.listen(IS_LIVE ? envConfigVars.PORT : envFileVars.PORT, () => {
+  console.log('\nenvFileVars:', envFileVars)
 
-  console.log(`Build env: ${env('NODE_ENV')}`)
-  console.log(`Running env: ${env('RUN_ENV')}\n`)
+  console.log('\nenvConfigVars:', envConfigVars)
 
-  console.log(`API Server running on ${env('PROTOCOL')}${env('HOST')}:${env('PORT')}`)
+  console.log(`\nBuild env: ${NODE_ENV}`)
+  console.log(`Running env: ${RUN_ENV}`)
+
+  console.log(`\nAPI Server running on port ${IS_LIVE ? envConfigVars.PORT : envFileVars.PORT}`)
+
+  console.log('process.env:', process.env)
 })
