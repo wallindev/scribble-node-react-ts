@@ -343,7 +343,7 @@ app.get('*', async (req, res) => {
   }
   try {
     const indexHtml = await readFile(indexHtmlPath, 'utf8')
-    modifiedIndexHtml = indexHtml.replace('{{CSS_PATH}}', envConfigVars.CSS_PATH)
+    modifiedIndexHtml = indexHtml.replace('{{CSS_PATH}}', IS_LIVE ? envConfigVars.CSS_PATH : envFileVars.CSS_PATH)
   } catch(error) {
     console.error("Error reading index.html:\n", error)
     return res.status(HttpStatusCode.InternalServerError).send({ message: 'Error reading index.html', error })
