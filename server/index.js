@@ -363,5 +363,5 @@ app.listen(IS_LIVE ? envConfigVars.PORT : envFileVars.PORT, () => {
 
   console.log(`\nAPI Server running on port ${IS_LIVE ? envConfigVars.PORT : envFileVars.PORT}`)
 
-  console.log('process.env:', process.env)
+  // console.log('process.env:', process.env)
 })
