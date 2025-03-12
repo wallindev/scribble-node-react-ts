@@ -1,5 +1,5 @@
-// Let's first try without port (and https), see what happens
-export const API_URL = 'https://localhost/api'
+// Let's first try with just the path
+export const API_PATH = '/api'
 
 // then, set the real URL. this should absolutely work
 // export const API_URL = 'https://node-react-ts-33315b5eaefa.herokuapp.com/api'
