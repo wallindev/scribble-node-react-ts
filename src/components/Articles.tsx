@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios, { /* HttpStatusCode,  */isAxiosError } from 'axios'
+import axios, { HttpStatusCode, isAxiosError } from 'axios'
 import type { FC, JSX } from 'react'
 import type { AxiosError, AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
@@ -8,10 +8,10 @@ import CustomButton from './shared/CustomButton'
 import FlashMessage from './shared/FlashMessage'
 import TextLink from './shared/TextLink'
 import type { TArticle, IGlobal, TFlashMessage } from '../types/general.types'
-import { consoleError, dismissFlashMessage, getToken, localDateStr, logout } from '../utils/functions'
+import { consoleError, dismissFlashMessage, getAuthToken, localDateStr, logout } from '../utils/functions'
 import { defaultFlashMessage } from '../utils/defaults'
 
-const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Element => {
+const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, wrapperRef }): JSX.Element => {
   const navigate = useNavigate()
   const [articles, setArticles] = useState<TArticle[]>([])
   const [flashMessage, setFlashMessage] = useState<TFlashMessage>(defaultFlashMessage)
@@ -24,10 +24,12 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.El
       try {
         const response: AxiosResponse = await axios.get('/articles', {
           headers: {
-            Authorization: `Bearer ${getToken()}`
+            Authorization: `Bearer ${getAuthToken()}`
           }
         })
-        setArticles(response.data)
+        if (response.status === HttpStatusCode.Ok && response.data) {
+          setArticles(response.data)
+        }
       } catch (e) {
         if (isAxiosError(e)) {
           error = e as AxiosError
@@ -83,10 +85,12 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.El
       try {
         const response: AxiosResponse = await axios.delete(`${'/articles'}/${artcl.id}`, {
           headers: {
-            Authorization: `Bearer ${getToken()}`,
+            Authorization: `Bearer ${getAuthToken()}`,
           },
         })
-        setArticles(response.data)
+        if (response.status === HttpStatusCode.Ok && response.data) {
+          setArticles(response.data)
+        }
       } catch (e) {
         if (isAxiosError(e))  {
           error = e as AxiosError
@@ -124,7 +128,7 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.El
   }
 
   return (
-    <Layout loading={loading} theme={theme} setTheme={setTheme}>
+    <Layout loading={loading} theme={theme} setTheme={setTheme} wrapperRef={wrapperRef}>
       {flashMessage.visible && (
         <FlashMessage
           message={flashMessage.message}
