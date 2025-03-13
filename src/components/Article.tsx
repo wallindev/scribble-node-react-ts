@@ -8,7 +8,7 @@ import CustomButton from './shared/CustomButton'
 import FlashMessage from './shared/FlashMessage'
 import { Mode } from '../types/general.types'
 import type { IGlobal, Mode as TMode, TFlashMessage, TArticle } from '../types/general.types'
-import { consoleError, dismissFlashMessage, getToken, getUserId, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
+import { consoleError, dismissFlashMessage, getAuthToken, getUserId, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
 import { defaultArticle, defaultFlashMessage, defaultContentText, defaultTitleText } from '../utils/defaults'
 
 // import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect'
@@ -53,10 +53,10 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
           try {
             const response: AxiosResponse = await axios.get(`/articles/${params.id}`, {
               headers: {
-                Authorization: `Bearer ${getToken()}`,
+                Authorization: `Bearer ${getAuthToken()}`,
               },
             })
-            if (response.status === 200 && response.data) {
+            if (response.status === HttpStatusCode.Ok && response.data) {
               setArticle(response.data)
             }
           } catch (e) {
@@ -115,14 +115,12 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
   const updateArticle = async (artcl: Partial<TArticle>): Promise<void> => {
     let error
     try {
-      // console.log('params.id:', params.id)
       const response: AxiosResponse = await axios.patch(`/articles/${params.id}`, artcl, {
         headers: {
-          Authorization: `Bearer ${getToken()}`,
+          Authorization: `Bearer ${getAuthToken()}`,
         },
       })
-      // console.log('response.data:', response.data)
-      if (response.data) {
+      if (response.status === HttpStatusCode.Ok && response.data) {
         setArticle(response.data)
       }
     } catch (e) {
@@ -164,11 +162,11 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
       // console.log('params.id:', params.id)
       const response: AxiosResponse = await axios.post('/articles', artcl, {
         headers: {
-          Authorization: `Bearer ${getToken()}`
+          Authorization: `Bearer ${getAuthToken()}`
         }
       })
       // console.log('response.data:', response.data)
-      if (response.data) {
+      if (response.status === HttpStatusCode.Created && response.data) {
         setArticle(response.data)
         newArticleId = response.data.id
       }
