@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios, { isAxiosError } from 'axios'
+import axios, { HttpStatusCode, isAxiosError } from 'axios'
 import type { ChangeEvent, FC, JSX, KeyboardEvent, KeyboardEventHandler } from 'react'
 import type { AxiosError, AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import TextInput from './shared/TextInput'
-import CustomButton from './shared/CustomButton'
+import DelayedLink from './shared/DelayedLink'
 import FlashMessage from './shared/FlashMessage'
-import type { IGlobal, TFlashMessage } from '../types/general.types'
+import { LinkType, type IGlobal, type TFlashMessage } from '../types/general.types'
 import { consoleError, dismissFlashMessage } from '../utils/functions'
 import { defaultFlashMessage } from '../utils/defaults'
 import { login } from '../utils/functions'
 
-const Login: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
+const Login: FC<IGlobal> = ({ loading, theme, setTheme, wrapperRef }): JSX.Element => {
   const navigate = useNavigate()
   const inputEmailRef = useRef<HTMLInputElement>(null)
   const [email, setEmail] = useState<string>('')
@@ -27,10 +27,10 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
     let error
     try {
       const response: AxiosResponse = await axios.post('/login', { email, password })
-      const { userId, jwtToken } = response.data
-      // console.log('userId:', userId)
-      // console.log('jwtToken:', jwtToken)
-      login(userId, jwtToken)
+      if (response.status === HttpStatusCode.Ok && response.data) {
+        const { userId, jwtToken } = response.data
+        login(userId, jwtToken)
+      }
     } catch (e) {
       if (isAxiosError(e))  {
         error = e as AxiosError
@@ -70,15 +70,13 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
   }
 
   return (
-    <Layout loading={loading} theme={theme} setTheme={setTheme}>
+    <Layout loading={loading} theme={theme} setTheme={setTheme} wrapperRef={wrapperRef}>
       <div>
-        {flashMessage.visible && (
-          <FlashMessage
+        {flashMessage.visible ? <FlashMessage
             message={flashMessage.message}
             type={flashMessage.type}
             onDismiss={() => dismissFlashMessage(flashMessage, setFlashMessage)}
-          />
-        )}
+          /> : <div className="h-8 mb-2"></div>}
         <h3 className="text-2xl font-bold mb-4">Login</h3>
         <div className="flex flex-col sm:items-start mb-4">
           <label htmlFor="email" className="p-1">Email</label>
@@ -103,8 +101,8 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
             onKeyDown={keyDownOnElement}
           />
           <div className="flex flex-row sm:items-start mt-4">
-            <CustomButton className="max-sm:flex-1/2 mr-0.5 sm:mr-1" type="button" onClick={() => navigate('/')}>&laquo; Cancel</CustomButton>
-            <CustomButton className="max-sm:flex-1/2 ml-0.5 sm:ml-1" type="button" onClick={handleLogin}>Login</CustomButton>
+            <DelayedLink wrapperRef={wrapperRef} linkType={LinkType.Button} className="max-sm:flex-1/2 mr-0.5 sm:mr-1" buttonType="button" to="/">&laquo; Cancel</DelayedLink>
+            <DelayedLink wrapperRef={wrapperRef} linkType={LinkType.Button} className="max-sm:flex-1/2 ml-0.5 sm:ml-1" type="button" onClick={handleLogin}>Login</DelayedLink>
           </div>
         </div>
       </div>
