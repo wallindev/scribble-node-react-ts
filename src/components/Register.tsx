@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios, { isAxiosError } from 'axios'
+import axios, { HttpStatusCode, isAxiosError } from 'axios'
 import type { ChangeEvent, FC, JSX, KeyboardEvent, KeyboardEventHandler } from 'react'
 import type { AxiosError, AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
@@ -8,11 +8,10 @@ import TextInput from './shared/TextInput'
 import CustomButton from './shared/CustomButton'
 import FlashMessage from './shared/FlashMessage'
 import type { IGlobal, TFlashMessage } from '../types/general.types'
-import { consoleError, dismissFlashMessage } from '../utils/functions'
+import { consoleError, dismissFlashMessage, scrollSmoothlyToTop } from '../utils/functions'
 import { defaultFlashMessage } from '../utils/defaults'
-import { login } from '../utils/functions'
 
-const Register: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
+const Register: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Element => {
   const navigate = useNavigate()
   const [firstName, setFirstName] = useState<string>('')
   const [lastName, setLastName] = useState<string>('')
@@ -22,12 +21,19 @@ const Register: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
   const [flashMessage, setFlashMessage] = useState<TFlashMessage>(defaultFlashMessage)
 
   const handleRegister = async () => {
-    let error
+    let error, userId
     try {
+      setLoading!(true)
+      scrollSmoothlyToTop()
+      setFlashMessage({
+        message: 'Sending verification email...',
+        type: 'success',
+        visible: true,
+      })
       const response: AxiosResponse = await axios.post('/register', { firstName, lastName, email, password, passwordConfirm })
-      // const { newUser, userId, jwtToken } = response.data
-      const { userId, jwtToken } = response.data
-      login(userId, jwtToken)
+      if (response.status === HttpStatusCode.Created && response.data) {
+        userId = response.data.userId
+      }
     } catch (e) {
       if (isAxiosError(e)) {
         error = e as AxiosError
@@ -45,17 +51,18 @@ const Register: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
           visible: true,
         })
       }
+    } finally {
+      setLoading!(false)
     }
-    if (!error) {
-      // TODO: Add sending a verify email, and building 'verify' endpoint
+    if (!error && userId) {
+      setFlashMessage(defaultFlashMessage)
       setTimeout(() => {
-        navigate('/home')
-      }, 3000)
-      setFlashMessage({
-        message: 'Regitration successful! Redirecting in 3 seconds...',
-        type: 'success',
-        visible: true,
-      })
+        setFlashMessage({
+          message: 'Registration successful! Check your mail that you registered with!',
+          type: 'success',
+          visible: true,
+        })
+      }, 50)
     }
   }
 
@@ -69,13 +76,11 @@ const Register: FC<IGlobal> = ({ loading, theme, setTheme }): JSX.Element => {
   return (
     <Layout loading={loading} theme={theme} setTheme={setTheme}>
       <div>
-        {flashMessage.visible && (
-          <FlashMessage
+        {flashMessage.visible ? <FlashMessage
             message={flashMessage.message}
             type={flashMessage.type}
             onDismiss={() => dismissFlashMessage(flashMessage, setFlashMessage)}
-          />
-        )}
+          /> : <div className="h-8 mb-2"></div>}
         <h3 className="text-2xl font-bold mb-4">Register</h3>
         <div className="flex flex-col sm:items-start mb-4">
           <label htmlFor="firstName" className="p-1">First Name</label>
