@@ -9,12 +9,12 @@ import CustomButton from './shared/CustomButton'
 import FlashMessage from './shared/FlashMessage'
 import { Mode } from '../types/general.types'
 import type { IGlobal, Mode as TMode, TFlashMessage, TUser } from '../types/general.types'
-import { consoleError, dismissFlashMessage, getToken, getUserId, localDateStr, selectElementText } from '../utils/functions'
+import { consoleError, dismissFlashMessage, getAuthToken, getUserId, localDateStr, selectElementText } from '../utils/functions'
 import { defaultFlashMessage, defaultUser } from '../utils/defaults'
 
 // import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect'
 
-const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Element => {
+const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, wrapperRef }): JSX.Element => {
   const [searchParams, setSearchParams] = useSearchParams()
   const matchProfile = useMatch('/profile')
   const navigate = useNavigate()
@@ -47,10 +47,10 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Elemen
         try {
           const response: AxiosResponse = await axios.get(`/users/${user.id}`, {
             headers: {
-              Authorization: `Bearer ${getToken()}`,
+              Authorization: `Bearer ${getAuthToken()}`,
             },
           })
-          if (response.status === 200 && response.data) {
+          if (response.status === HttpStatusCode.Ok && response.data) {
             // console.log('response.data:', response.data)
             setUser(response.data)
           }
@@ -114,10 +114,12 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Elemen
     try {
       const response: AxiosResponse = await axios.patch(`/users/${usr.id}`, usr, {
         headers: {
-          Authorization: `Bearer ${getToken()}`,
+          Authorization: `Bearer ${getAuthToken()}`,
         },
       })
-      setUser(response.data)
+      if (response.status === HttpStatusCode.Ok && response.data) {
+        setUser(response.data)
+      }
     } catch (e) {
       if (isAxiosError(e))  {
         error = e as AxiosError
@@ -155,9 +157,10 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Elemen
     let error
     try {
       const response: AxiosResponse = await axios.post('/users', usr)
-      // console.log('response.data:', response.data)
-      setUser(response.data)
-      navigate(`/profile`)
+      if (response.status === HttpStatusCode.Created && response.data) {
+        setUser(response.data)
+        navigate(`/profile`)
+      }
     } catch (error) {
       if (isAxiosError(error))  {
         const axiosError: AxiosError = error as AxiosError
@@ -197,7 +200,7 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Elemen
   }
 
   return (
-    <Layout loading={loading} theme={theme} setTheme={setTheme}>
+    <Layout loading={loading} theme={theme} setTheme={setTheme} wrapperRef={wrapperRef}>
       <div>
         {flashMessage.visible && (
           <FlashMessage
