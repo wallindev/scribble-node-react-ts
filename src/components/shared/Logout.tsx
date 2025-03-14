@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom'
+import classNames from 'classnames'
 import type { FC, JSX, MouseEvent } from 'react'
 import CustomButton from './CustomButton'
 import { logout } from '../../utils/functions'
 import type { ILogout } from '../../types/form.types'
 
-const Logout: FC<ILogout> = ({ size = 'large', ...props }): JSX.Element => {
+const Logout: FC<ILogout> = ({ className, size = 'large', ...props }): JSX.Element => {
   const navigate = useNavigate()
 
   const handleLogout = (e: MouseEvent<HTMLButtonElement>): void => {
@@ -14,7 +15,7 @@ const Logout: FC<ILogout> = ({ size = 'large', ...props }): JSX.Element => {
   }
 
   return (
-    <CustomButton onClick={handleLogout} size={size} {...props}>Logout</CustomButton>
+    <CustomButton className={classNames('outline-0', className)} onClick={handleLogout} size={size} {...props}>Logout</CustomButton>
   )
 }
 
