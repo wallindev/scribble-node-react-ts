@@ -12,7 +12,7 @@ const FlashMessage: FC<IFlashMessage> = ({ message, type, onDismiss }): JSX.Elem
     const opacityTimer = setTimeout(() => {
       // setIsVisible(true)
       (divRef.current as HTMLDivElement)?.classList?.replace('opacity-0', 'opacity-100')
-    }, 1)
+    }, 50)
 
     return () => clearTimeout(opacityTimer)
   }, [])
@@ -25,8 +25,8 @@ const FlashMessage: FC<IFlashMessage> = ({ message, type, onDismiss }): JSX.Elem
   }
 
   return (
-    <div ref={divRef} className="transition-opacity delay-0 duration-1000 opacity-0">
-      <div className={`flex justify-between items-center rounded-sm p-1 mb-4 ${colors[type]}`}>
+    <div ref={divRef} className="h-8 mb-2 transition-opacity delay-0 duration-1000 opacity-0">
+      <div className={`flex p-1 justify-between items-center rounded-sm ${colors[type]}`}>
         <div className="text-gray-100 bg-transparent text-sm" dangerouslySetInnerHTML={{ __html: message }} />
         <CustomButton onClick={onDismiss} size="small">×</CustomButton>
       </div>
