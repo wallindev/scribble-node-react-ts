@@ -7,10 +7,10 @@ import Layout from './layout/Layout'
 import TextInput from './shared/TextInput'
 import DelayedLink from './shared/DelayedLink'
 import FlashMessage from './shared/FlashMessage'
-import { LinkType, type IGlobal, type TFlashMessage } from '../types/general.types'
-import { consoleError, dismissFlashMessage } from '../utils/functions'
+import { LinkType } from '../types/general.types'
+import type { IGlobal, TFlashMessage } from '../types/general.types'
+import { consoleError, dismissFlashMessage, login } from '../utils/functions'
 import { defaultFlashMessage } from '../utils/defaults'
-import { login } from '../utils/functions'
 
 const Login: FC<IGlobal> = ({ loading, theme, setTheme, wrapperRef }): JSX.Element => {
   const navigate = useNavigate()
