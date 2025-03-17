@@ -24,12 +24,15 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme, wrapperRef }): JSX.Eleme
   }, [])
 
   const handleLogin = async () => {
-    let error
+    let error, tokenData
     try {
       const response: AxiosResponse = await axios.post('/login', { email, password })
       if (response.status === HttpStatusCode.Ok && response.data) {
-        const { userId, jwtToken } = response.data
-        login(userId, jwtToken)
+        const { userId, authToken, issued, expires } = response.data
+        tokenData = JSON.stringify({ userId, authToken, issued, expires })
+        // console.log('tokenData:', tokenData)
+        // console.log('JSON.parse(tokenData):', JSON.parse(tokenData))
+        login(tokenData)
       }
     } catch (e) {
       if (isAxiosError(e))  {
@@ -50,7 +53,7 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme, wrapperRef }): JSX.Eleme
         })
       }
     }
-    if (!error) {
+    if (!error && tokenData) {
       setTimeout(() => {
         navigate('/home')
       }, 3000)
