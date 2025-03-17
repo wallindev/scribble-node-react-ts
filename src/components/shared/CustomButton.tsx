@@ -3,7 +3,10 @@ import type { FC, JSX } from 'react'
 import type { ICustomButton } from '../../types/form.types'
 
 const CustomButton: FC<ICustomButton> = ({ onClick, to, type, children, className, size = 'large', ...props }): JSX.Element => {
-  let classNamesButton = 'inline-block bg-button-bg text-button-text border-0 rounded-sm [&:hover,&:active,&:focus]:bg-button-bg--hover outline-0 cursor-pointer transition-colors duration-300'
+
+  // console.log('css classes from start:', className)
+
+  let classNamesButton = `inline-block bg-button-bg text-button-text border-0 rounded-sm cursor-pointer transition-colors duration-300`
   switch (size) {
     case 'small':
       classNamesButton = `${classNamesButton} leading-[1.2] p-1 px-2 text-xs`
@@ -16,11 +19,12 @@ const CustomButton: FC<ICustomButton> = ({ onClick, to, type, children, classNam
       break;
     default:
   }
-  let classNamesLink = `${classNamesButton} hover: no-underline [&:visited,&:hover]:text-button-text`
-  // class="pointer-events-none select-none text-button-text leading-[1.2]"
+
+  // class="pointer-events-none select-none text-button-text leading-[1.2] hover:-translate-y-1"
+
+  let classNamesLink = `${classNamesButton} hover: no-underline visited: text-button-text`
   to ? classNamesLink = className ? `${classNamesLink} ${className}` : classNamesLink :
        classNamesButton = className ? `${classNamesButton} ${className}` : classNamesButton
-
   return to ? (
     <Link className={classNamesLink} to={to} {...props}>
       <span className="text-inherit pointer-events-none">{children}</span>
