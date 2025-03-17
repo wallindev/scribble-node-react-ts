@@ -17,6 +17,7 @@ export interface ICustomButton {
 }
 
 export interface ILogout {
+  className?: string
   size?: 'small' | 'medium' | 'large'
   [key: string]: any
 }
