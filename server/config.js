@@ -39,7 +39,7 @@ export let envConfigVars = {}
 if (IS_LIVE) {
   envConfigVars['CSS_PATH']   = process.env.CSS_PATH   || '/css/index.css'
   envConfigVars['DB_PATH']    = process.env.DB_PATH    || './api-data/db.json'
-  envConfigVars['JWT_SECRET'] = process.env.JWT_SECRET || 'b029f401e21027eb9ddb4204f6aad6923c192ea2323b2bbb96d031c2c0a18051'
+  envConfigVars['SECRET_AUTH'] = process.env.SECRET_AUTH || 'b029f401e21027eb9ddb4204f6aad6923c192ea2323b2bbb96d031c2c0a18051'
   envConfigVars['PORT']       = process.env.PORT       || 3000
 }
 
