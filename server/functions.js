@@ -5,12 +5,57 @@ import { join } from 'node:path'
 import { promisify } from 'node:util'
 import mime from 'mime/lite'
 import jwt from 'jsonwebtoken'
+import nodemailer from 'nodemailer'
 const scryptAsync = promisify(scrypt)
 const decodeJwtSync = jwt.decode
 const signJwtAsync = promisify(jwt.sign)
 const verifyJwtAsync = promisify(jwt.verify)
 import { __filename, __dirname } from './constants.js'
 import { envFileVars, envConfigVars, IS_LIVE } from './config.js'
+
+/*
+ * Mail functions
+ */
+export const sendVerifyEmail = async (toEmail, verifyToken, host) => {
+  const verificationLink = `${host}/verify/${verifyToken}`
+  const subject = 'Verify Your Email'
+  const body = `<p>Please click this link to verify your email:</p>
+<p>${verificationLink}</p>`
+  await sendEmail(toEmail, subject, body)
+}
+
+export const sendEmail = async (to, subject, html) => {
+  // console.log('EMAIL_USER:', process.env.EMAIL_USER)
+  // console.log('EMAIL_PASS:', process.env.EMAIL_PASS)
+  // console.log('to:', to)
+  // console.log('subject:', subject)
+  // console.log('html:', html)
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.mail.yahoo.com',
+    port: 465,
+    service: 'yahoo',
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+    debug: false,
+    logger: true,
+  })
+
+  const mailOptions = {
+    // from: 'Scribble-admin <admin@scribbleapp.com>',
+    from: 'Mikael Wallin <mikael.wallin@yahoo.se>',
+    to,
+    subject,
+    html,
+  }
+  // console.log('mailOptions:', mailOptions)
+  // return
+
+  await transporter.sendMail(mailOptions)
+}
+
 /*
  * DB functions
  */
@@ -65,22 +110,41 @@ export const signJwtToken = async (payload, secret, options = {}) => {
   }
 }
 
-export const verifyJwtToken = async (token, secret) => {
+export const verifyJwtToken = async (payload, secret) => {
   try {
-    return await verifyJwtAsync(token, secret)
+    return await verifyJwtAsync(payload, secret)
   } catch (err) {
     throw err
   }
 }
 
 export const readToken = (token) =>
-  decodeJwtToken(token, IS_LIVE ? envConfigVars.JWT_SECRET : envFileVars.JWT_SECRET)
+  decodeJwtToken(token, IS_LIVE ? envConfigVars.SECRET_AUTH : envFileVars.SECRET_AUTH)
 
-export const generateToken = async (userId) =>
-  await signJwtToken({ userId }, IS_LIVE ? envConfigVars.JWT_SECRET : envFileVars.JWT_SECRET, { expiresIn: '1h' })
+export const generateToken = async (payload, type = 'auth', options = {}) => {
+  let secretKey = ''
+  if (type === 'verify') {
+    payload = { email: payload }
+    secretKey = IS_LIVE ? envConfigVars.SECRET_VERIFY : envFileVars.SECRET_VERIFY
+  } else {
+    payload = { userId: payload }
+    secretKey = IS_LIVE ? envConfigVars.SECRET_AUTH : envFileVars.SECRET_AUTH
+  }
+  return await signJwtToken(payload, secretKey, { expiresIn: '1h' })
+}
 
-export const validateToken = async (token) =>
-  await verifyJwtToken(token, IS_LIVE ? envConfigVars.JWT_SECRET : envFileVars.JWT_SECRET)
+export const validateToken = async (payload, type = 'auth') => {
+  let secretKey = ''
+  if (type === 'verify') {
+    // payload = { email: payload }
+    secretKey = IS_LIVE ? envConfigVars.SECRET_VERIFY : envFileVars.SECRET_VERIFY
+  } else {
+    // payload = { userId: payload }
+    secretKey = IS_LIVE ? envConfigVars.SECRET_AUTH : envFileVars.SECRET_AUTH
+  }
+
+  return await verifyJwtToken(payload, secretKey)
+}
 
 /*
  * General functions
