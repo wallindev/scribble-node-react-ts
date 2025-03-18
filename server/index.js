@@ -8,7 +8,7 @@ import { HttpStatusCode } from 'axios'
 import { JSONFilePreset } from 'lowdb/node'
 import { envFileVars, envConfigVars, IS_LIVE, NODE_ENV, RUN_ENV, PROD_ENV } from './config.js'
 import { __dirname } from './constants.js'
-import { comparePassword, env, generateToken, getMaxId, hashPassword, localDateStr, readToken, validateToken } from './functions.js'
+import { comparePassword, generateToken, getMaxId, hashPassword, localDateStr, readToken, secretKey, sendVerifyEmail, validateToken } from './functions.js'
 // import './config.js'
 
 // Directories and files
@@ -43,6 +43,34 @@ const db = await JSONFilePreset(dbFilePath, { articles: [], users: [], tokens: [
 // const apiRoot = '/api'
 const onlyDigits = '([0-9]+)'
 
+const decodeTokenDataFromHeader = async (headers) => {
+  const authHeader = headers.authorization
+  if (!authHeader) return res.status(HttpStatusCode.Unauthorized).json({ message: 'Authorization header missing' })
+  const token = authHeader.split(' ')[1]
+  if (!token) return res.status(HttpStatusCode.Unauthorized).json({ message: 'Token missing from authorization header' })
+  try {
+    const decodedTokenData = await validateToken(token)
+    // console.log('decodedTokenData:', decodedTokenData)
+    return decodedTokenData
+  } catch (error) {
+    throw error
+  }
+}
+
+const readTokenDataFromHeader = (headers) => {
+  const authHeader = headers.authorization
+  if (!authHeader) return res.status(HttpStatusCode.Unauthorized).json({ message: 'Authorization header missing' })
+  const token = authHeader.split(' ')[1]
+  if (!token) return res.status(HttpStatusCode.Unauthorized).json({ message: 'Token missing from authorization header' })
+  try {
+    const tokenData = readToken(token)
+    // console.log('tokenData:', tokenData)
+    return tokenData
+  } catch (error) {
+    throw error
+  }
+}
+
 /*
  * Middlewares
  *
@@ -50,24 +78,12 @@ const onlyDigits = '([0-9]+)'
 
 // Authentication middleware
 const authenticate = async (req, res, next) => {
-  const authHeader = req.headers.authorization
-  if (!authHeader) return res.status(HttpStatusCode.Unauthorized).json({ message: 'Unauthorized' })
-  const token = authHeader.split(' ')[1]
-
   try {
-    const tokenData = readToken(token)
-    console.log('Token Data:', tokenData)
-    // TODO: Must change 'token' to token below!!
-    // This is just a test of malforming the token!
-    const decoded = await validateToken(token)
-    const { userId, iat, exp } = decoded
-    console.log('\nToken is valid:', decoded)
-    console.log('\nToken data')
-    console.log('------------')
-    console.log('User id:', userId)
-    console.log('Issued:', localDateStr(new Date(iat * 1000)))
-    console.log('Expiry:', localDateStr(new Date(exp * 1000)))
-    req.user = decoded
+    const decodedTokenData = await decodeTokenDataFromHeader(req.headers)
+    const { userId, iat, exp } = decodedTokenData
+    const issued = localDateStr(new Date(iat * 1000))
+    const expires = localDateStr(new Date(exp * 1000))
+    req.user = { userId, issued, expires }
     next()
   } catch (error) {
     // console.log('error.name:', error.name)
@@ -84,11 +100,6 @@ const authenticate = async (req, res, next) => {
   }
 }
 
-/*
- * Default params and other request data
- *
- */
-
 // Default article id param check
 api.use(`/articles/:id${onlyDigits}`, authenticate, (req, res, next) => {
   if (!Number.isInteger(Number(req.params.id)))
@@ -104,7 +115,7 @@ api.use([`/users/:id${onlyDigits}`/* , `/profile/:id${onlyDigits}` */], authenti
 })
 
 // User id on protected resources
-api.use(['/articles'/* , '/profile' */], authenticate, (req, res, next) => {
+api.use(['/articles', '/users'], authenticate, (req, res, next) => {
   // console.log('\nreq.user?.userId:', req.user?.userId)
   if (!req.user?.userId) {
     // TODO: Check this, using jwt directly like below can cause unexpected problems!
@@ -121,6 +132,8 @@ api.use(['/articles'/* , '/profile' */], authenticate, (req, res, next) => {
 
 // To print with color in terminal
 // console.log('\x1b[1m\x1b[31mAxios Error data:\x1b[0m')
+
+// Handles unexpected route errors
 /* api.use((err, req, res, next) => {
   if (err instanceof NotFoundError) {
     return res.status(err.statusCode).json({ message: err.message })
@@ -131,6 +144,7 @@ api.use(['/articles'/* , '/profile' */], authenticate, (req, res, next) => {
   res.status(HttpStatusCode.InternalServerError).json({ message: 'Internal server error' })
 }) */
 
+// Handles unexpected route errors, with more detailed http status and error details
 /* api.use((err, req, res, next) => {
   const statusCode = HttpStatusCode[err.statusCode] || HttpStatusCode.InternalServerError
   const message = err.message || 'Internal server error'
@@ -146,7 +160,7 @@ api.use(['/articles'/* , '/profile' */], authenticate, (req, res, next) => {
 }) */
 
 // All Articles
-api.get('/articles', async (req, res, next) => {
+api.get('/articles', async (req, res) => {
   await db.read()
   if (!db.data.articles) return res.status(HttpStatusCode.NotFound).json({ message: 'No Articles found' })
   const articles = db.data.articles.filter(article => article.userId === req.user.userId)
@@ -155,7 +169,7 @@ api.get('/articles', async (req, res, next) => {
 })
 
 // One Article
-api.get(`/articles/:id${onlyDigits}`, async (req, res, next) => {
+api.get(`/articles/:id${onlyDigits}`, async (req, res) => {
   await db.read()
   const article = db.data.articles.find(a => a.id === req.params.id)
   if (!article) return res.status(HttpStatusCode.NotFound).json({ message: 'Article not found' })
@@ -163,7 +177,7 @@ api.get(`/articles/:id${onlyDigits}`, async (req, res, next) => {
 })
 
 // Update Article
-api.patch(`/articles/:id${onlyDigits}`, async (req, res, next) => {
+api.patch(`/articles/:id${onlyDigits}`, async (req, res) => {
   let { title, content } = req.body
   title = title.replace(/\r\n|\r|\n/g, '')
   const modified = localDateStr()
@@ -188,7 +202,7 @@ api.patch(`/articles/:id${onlyDigits}`, async (req, res, next) => {
 })
 
 // Store new Article
-api.post('/articles', authenticate, async (req, res, next) => {
+api.post('/articles', async (req, res) => {
   const { title, content } = req.body
   if (!title || !content) return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid article data' })
 
@@ -234,7 +248,7 @@ api.delete(`/articles/:id${onlyDigits}`, async (req, res) => {
 })
 
 // One User
-api.get([`/users/:id${onlyDigits}`/* , `/profile/:id${onlyDigits}` */], async (req, res, next) => {
+api.get(`/users/:id${onlyDigits}`, async (req, res) => {
   await db.read()
   const user = db.data.users.find(u => u.id === req.params.id)
   if (!user) return res.status(HttpStatusCode.NotFound).json({ message: 'Article not found' })
@@ -242,7 +256,7 @@ api.get([`/users/:id${onlyDigits}`/* , `/profile/:id${onlyDigits}` */], async (r
 })
 
 // Update User
-api.patch(`/users/:id${onlyDigits}`, async (req, res, next) => {
+api.patch(`/users/:id${onlyDigits}`, async (req, res) => {
   let { firstName, lastName, email } = req.body
   const modified = localDateStr()
   if (!firstName || !email || !modified)
@@ -264,7 +278,7 @@ api.patch(`/users/:id${onlyDigits}`, async (req, res, next) => {
 })
 
 // Create/Register user
-api.post('/register', async (req, res, next) => {
+api.post('/register', async (req, res) => {
   const { firstName, lastName, email, password, passwordConfirm } = req.body
   if (!firstName || !lastName || !email || !password || !passwordConfirm)
     return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid user data' })
@@ -285,6 +299,7 @@ api.post('/register', async (req, res, next) => {
     firstName,
     lastName,
     email,
+    emailVerified: false,
     password: hashedPassword,
     salt,
     created: newDate,
@@ -293,19 +308,66 @@ api.post('/register', async (req, res, next) => {
 
   // Insert into db and return to client
   try {
+    const verifyToken = await generateToken(email, 'verify')
+    // console.log('verifyToken:', verifyToken)
+    let hostUrl = req.headers.origin
+    if (!hostUrl)
+      hostUrl = IS_LIVE ? 'https://node-react-ts-33315b5eaefa.herokuapp.com' : 'http://localhost:5000'
+    console.log('hostUrl:', hostUrl)
+    console.time('sendMail')
+    await sendVerifyEmail(email, verifyToken, hostUrl)
+    console.timeEnd('sendMail')
     await db.read()
     await db.update(({ users }) => users.push(newUser))
     const userId = newUser.id
-    const jwtToken = await generateToken(userId)
-    // res.status(HttpStatusCode.Created).json({ newUser, userId, jwtToken })
-    res.status(HttpStatusCode.Created).json({ userId, jwtToken })
+    res.status(HttpStatusCode.Created).json({ userId })
   } catch (error) {
     console.error("Error creating user:\n", error)
     res.status(HttpStatusCode.InternalServerError).json({ message: 'Internal server error' })
   }
 })
 
-api.post('/login', async (req, res, next) => {
+// Verify user with email token, and set/send auth token
+api.get('/verify', async (req, res) => {
+  let { token } = req.query
+  console.log('token:', token)
+  if (!token)
+    return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid token' })
+
+  let decode
+  try {
+     decode = await validateToken(token, 'verify')
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') {
+      console.error('Token verification failed:', error.message)
+    } else {
+      console.error('Unexpected JWT Error:', error.message)
+    }
+    return res.status(HttpStatusCode.Unauthorized).json({ error })
+  }
+
+  const usersIndex = db.data.users.findIndex(user => user.email === decode.email)
+  if (usersIndex === -1) return res.status(HttpStatusCode.NotFound).json({ message: 'User not found' })
+
+  // Update db and return to client
+  try {
+    await db.read()
+    db.data.users[usersIndex] = {...db.data.users[usersIndex], emailVerified: true}
+    await db.write()
+  } catch (error) {
+    console.error("Error setting emailVerified to true:\n", error)
+    res.status(HttpStatusCode.InternalServerError).json({ message: 'Internal server error' })
+  }
+
+  const userId = db.data.users[usersIndex].id
+  const authToken = await generateToken(userId)
+  console.log('userId:', userId)
+  console.log('authToken:', authToken)
+  res.status(HttpStatusCode.Ok).json({ userId, authToken })
+})
+
+// Log in user with email and password, and set/send auth token
+api.post('/login', async (req, res) => {
   const { email, password } = req.body
   if (!email || !password) return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid user data' })
   const user = db.data.users.find(u => u.email === email)
@@ -316,7 +378,7 @@ api.post('/login', async (req, res, next) => {
 
   // Next step, to have a server cookie and handle all
   // authentication and authorization on the server
-  // const token = jwt.sign({ userId: user.id }, env('JWT_SECRET'), { expiresIn: '1h' })
+  // const token = jwt.sign({ userId: user.id }, env('SECRET_AUTH'), { expiresIn: '1h' })
   // const token = generateToken(user.id)
   // res.cookie('authToken', token, {
   //   httpOnly: true,
@@ -325,17 +387,41 @@ api.post('/login', async (req, res, next) => {
   // })
 
   const userId = user.id
-  const jwtToken = await generateToken(userId)
-  // console.log('userId:', userId)
-  // console.log('jwtToken:', jwtToken)
-  res.status(HttpStatusCode.Ok).json({ userId, jwtToken })
+  const authToken = await generateToken(userId)
+  console.log('userId:', userId)
+  console.log('authToken:', authToken)
+  const { _, iat, exp } = readToken(authToken)
+  const issued = iat * 1000
+  const expires = exp * 1000
+  console.log('issued (secs):', iat)
+  console.log('expires (secs):', exp)
+  console.log('issued (millisecs):', issued)
+  console.log('expires (millisecs):', expires)
+  res.status(HttpStatusCode.Ok).json({ userId, authToken, issued, expires })
 })
 
-api.get('/verify', async (req, res, next) => {
+// Route only used to view auth token
+api.get('/token', (req, res) => {
+  try {
+    const { userId, iat, exp } = readTokenDataFromHeader(req.headers)
+    const issued = localDateStr(new Date(iat * 1000))
+    const expires = localDateStr(new Date(exp * 1000))
+    console.log('\nToken data')
+    console.log('------------')
+    console.log('User id:', userId)
+    console.log('Issued:', issued)
+    console.log('Expires:', expires)
+    const authToken = { userId, issued, expires }
+    console.log('authToken:', authToken)
+    res.status(HttpStatusCode.Ok).json({ authToken})
+  } catch (error) {
+    console.error('Token read failed:', error.message)
+    return res.status(HttpStatusCode.Unauthorized).json({ error })
+  }
 })
 
 // Serve index.html for all other routes on app
-app.get('*', async (req, res) => {
+app.get('*', async (_, res) => {
   let modifiedIndexHtml
   if (!fileExists(indexHtmlPath)) {
     console.error("Couldn't find index.html")
