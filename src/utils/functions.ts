@@ -16,23 +16,23 @@ import type { AxiosError } from 'axios'
  * Functions
  *
  */
-export const setElementText = (element: HTMLDivElement, text: string) => element.innerText = text
 
-export const selectElementText = (element: HTMLDivElement | HTMLInputElement, text?: string): void => {
-  if (((element as HTMLDivElement) && (element as HTMLDivElement).innerText === text) ||
-      ((element as HTMLInputElement) && (element as HTMLInputElement).value === text)) {
-    const range = document.createRange()
+export const scrollSmoothlyToTop = (): void => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
+
+export const setElementText = (element: HTMLDivElement, text: string): void => { element.innerText = text }
+
+export const selectElementText = (element: HTMLDivElement | HTMLInputElement, text: string): void => {
+  if ((element as HTMLDivElement)?.innerText === text || (element as HTMLInputElement)?.value === text) {
+    const range: Range = document.createRange()
     range.selectNodeContents(element)
     // const selection = window.getSelection()
-    const selection = document.getSelection()
-    selection!.removeAllRanges()
-    selection!.addRange(range)
+    const selection: Selection = document.getSelection() as Selection
+    selection.removeAllRanges()
+    selection.addRange(range)
   }
 }
 
-export const replaceNewlinesWithBr = (text: string): string => {
-  return text.replace(/\r\n|\r|\n/g, '<br />')
-}
+export const replaceNewlinesWithBr = (text: string): string => text.replace(/\r\n|\r|\n/g, '<br />')
 
 export const dismissFlashMessage = (
   flashMessage: TFlashMessage,
@@ -41,71 +41,56 @@ export const dismissFlashMessage = (
   setFlashMessage({ ...flashMessage, visible: false })
 }
 
-// Short-form of process.env.KEY
-export const env = (key: string) => process.env[key]
+export const login = (tokenData: string): void => setTokenData(tokenData)
 
-export const login = (userId: number, token: string): void => {
-  setAuth(true)
-  setUserId(userId)
-  setToken(token)
+export const logout = (): void => removeTokenData()
+
+export const getTokenData = (): string | null => localStorage.getItem('tokenData')
+
+export const setTokenData = (tokenData: string): void => localStorage.setItem('tokenData', tokenData)
+
+export const removeTokenData = (): void => localStorage.removeItem('tokenData')
+
+export const getUserId = (): number | null => {
+  const tokenData = getTokenData()
+  if (!tokenData) return null
+  const tokenDataJson = JSON.parse(tokenData)
+  if (!Number.isInteger(Number(tokenDataJson.userId))) return null
+  // console.log('tokenData:', tokenData)
+  // console.log('tokenDataJson:', tokenDataJson)
+  // console.log('tokenDataJson.userId:', tokenDataJson.userId)
+  return Number(tokenDataJson.userId)
 }
 
-export const logout = (): void => {
-  setAuth(false)
-  removeUserId()
-  removeToken()
+export const hasUserId = (): boolean => getUserId() !== null
+
+export const getAuthToken = (): string | null => {
+  const tokenData = getTokenData()
+  if (!tokenData) return null
+  const tokenDataJson = JSON.parse(tokenData)
+  return tokenDataJson.authToken || null
+}
+
+export const hasAuthToken = (): boolean => getAuthToken() !== null
+
+export const authTokenValid = (): boolean => {
+  const tokenData = getTokenData()
+  if (!tokenData) return false
+  const tokenDataJson = JSON.parse(tokenData)
+  const tokenTimestamp = tokenDataJson.expires
+  if (!tokenTimestamp) return false
+  // console.log('tokenTimestamp:', tokenTimestamp)
+  // console.log('Date.now():', Date.now())
+  // console.log('Date.now() <= tokenTimestamp:', Date.now() <= tokenTimestamp)
+  return Date.now() <= tokenTimestamp
 }
 
 // Helper function to check authentication status
-export const isAuthenticated = (): boolean => {
-  // TODO: Change this to localStorage.getItem('token')
-  // when full authentication is implemented
-  return localStorage.getItem('AUTHENTICATED') === 'true' && hasUserId() && hasToken()
-}
+// TODO: Change this to server-only cookie
+export const isAuthenticated = (): boolean => hasUserId() && hasAuthToken() && authTokenValid()
 
-export const setAuth = (authenticated: boolean): void => {
-  authenticated ? localStorage.setItem('AUTHENTICATED', 'true') : localStorage.removeItem('AUTHENTICATED')
-}
-
-export const getUserId = (): number | null => {
-  const userId: string | null = localStorage.getItem('userId')
-  if (userId || Number.isInteger(Number(userId))) {
-    return Number(userId)
-  } else {
-    return null
-  }
-}
-
-export const setUserId = (userId: number): void => {
-  localStorage.setItem('userId', userId.toString())
-}
-
-export const removeUserId = (): void => {
-  localStorage.removeItem('userId')
-}
-
-export const hasUserId = (): boolean => {
-  return localStorage.getItem('userId') !== null
-}
-
-export const getToken = (): string | null => {
-  return localStorage.getItem('token')
-}
-
-export const setToken = (token: string): void => {
-  localStorage.setItem('token', token)
-}
-
-export const removeToken = (): void => {
-  localStorage.removeItem('token')
-}
-
-export const hasToken = (): boolean => {
-  return localStorage.getItem('token') !== null
-}
-
-export const localDateStr = (dateStr?: string | null): string => {
-  const date = dateStr ? new Date(dateStr) : new Date()
+export const localDateStr = (dateStr?: string | number | Date | null): string => {
+  const date : Date = dateStr ? new Date(dateStr) : new Date()
   return date.toLocaleString("sv-SE", { timeZone: "Europe/Stockholm" })
 }
 
