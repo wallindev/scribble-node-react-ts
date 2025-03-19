@@ -34,7 +34,7 @@ const Layout: FC<ILayout> = ({ /* loading,  */theme, setTheme, wrapperRef, child
         <header>
           <MainNav wrapperRef={wrapperRef} subNavOpen={subNavOpen} setSubNavOpen={setSubNavOpen} />
         </header>
-        <main className="flex-1 p-4 sm:p-4 bg-main-content-bg rounded-xl overflow-y-auto">
+        <main className="outline-0 flex-1 p-4 sm:p-4 bg-main-content-bg rounded-xl overflow-y-auto">
           {children}
         </main>
         <footer>
