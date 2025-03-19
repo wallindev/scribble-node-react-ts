@@ -10,7 +10,7 @@ import type { ILayout } from '../../types/general.types'
 const Layout: FC<ILayout> = ({ /* loading,  */theme, setTheme, wrapperRef, children }): JSX.Element => {
   const [subNavOpen, setSubNavOpen] = useState(false)
 
-  // Fade-in-fade-out effect on route change (together with CSS transition)
+  // Fade-in effect on route change (together with CSS transition)
   useEffect(() => {
     const divWrapper = wrapperRef.current as HTMLDivElement
 
@@ -21,9 +21,6 @@ const Layout: FC<ILayout> = ({ /* loading,  */theme, setTheme, wrapperRef, child
     }, 100)
 
     return () => {
-      // Initiate fade-out (moved to DelayedLink component!)
-      // divWrapper.classList?.replace('opacity-100', 'opacity-0')
-
       clearTimeout(fadeInTimer)
     }
   }, [])
