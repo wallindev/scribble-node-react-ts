@@ -11,7 +11,7 @@ import type { IGlobal, TFlashMessage } from '../types/general.types'
 import { consoleError, dismissFlashMessage, scrollSmoothlyToTop } from '../utils/functions'
 import { defaultFlashMessage } from '../utils/defaults'
 
-const Register: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Element => {
+const Register: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, wrapperRef }): JSX.Element => {
   const navigate = useNavigate()
   const [firstName, setFirstName] = useState<string>('')
   const [lastName, setLastName] = useState<string>('')
@@ -74,7 +74,7 @@ const Register: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.El
   }
 
   return (
-    <Layout loading={loading} theme={theme} setTheme={setTheme}>
+    <Layout loading={loading} theme={theme} setTheme={setTheme} wrapperRef={wrapperRef}>
       <div>
         {flashMessage.visible ? <FlashMessage
             message={flashMessage.message}
