@@ -10,14 +10,15 @@ const scryptAsync = promisify(scrypt)
 const decodeJwtSync = jwt.decode
 const signJwtAsync = promisify(jwt.sign)
 const verifyJwtAsync = promisify(jwt.verify)
-import { __filename, __dirname } from './constants.js'
-import { envFileVars, envConfigVars, IS_LIVE } from './config.js'
+import { __dirname, IS_LIVE } from './constants.js'
+import { envFileVars, envConfigVars } from './config.js'
 
 /*
  * Mail functions
  */
 export const sendVerifyEmail = async (toEmail, verifyToken, host) => {
-  const verificationLink = `${host}/verify/${verifyToken}`
+  const verificationUrl = `${host}/verify/${verifyToken}`
+  const verificationLink = `<a href="${verificationUrl}">${verificationUrl}</a>`
   const subject = 'Verify Your Email'
   const body = `<p>Please click this link to verify your email:</p>
 <p>${verificationLink}</p>`
@@ -118,8 +119,7 @@ export const verifyJwtToken = async (payload, secret) => {
   }
 }
 
-export const readToken = (token) =>
-  decodeJwtToken(token, IS_LIVE ? envConfigVars.SECRET_AUTH : envFileVars.SECRET_AUTH)
+export const readToken = (token) => decodeJwtToken(token, IS_LIVE ? envConfigVars.SECRET_AUTH : envFileVars.SECRET_AUTH)
 
 export const generateToken = async (payload, type = 'auth', options = {}) => {
   let secretKey = ''
@@ -144,6 +144,49 @@ export const validateToken = async (payload, type = 'auth') => {
   }
 
   return await verifyJwtToken(payload, secretKey)
+}
+
+// Decode and read token data from auth header
+export const validateTokenDataFromHeader = async (headers) => {
+  const authHeader = headers.authorization
+  if (!authHeader) return null
+  const token = authHeader.split(' ')[1]
+  if (!token) return null
+  try {
+    const tokenData = await validateToken(token)
+    // console.log('validateTokenDataFromHeader, tokenData:', tokenData)
+    return tokenData
+  } catch (error) {
+    throw error
+  }
+}
+
+// Read token data from auth header
+export const readTokenDataFromHeader = (headers) => {
+  console.log('readTokenDataFromHeader')
+  const authHeader = headers.authorization
+  if (!authHeader) return null
+  const token = authHeader.split(' ')[1]
+  if (!token) return null
+  try {
+    const tokenData = readToken(token)
+    console.log('readTokenDataFromHeader, tokenData:', tokenData)
+    return tokenData
+  } catch (error) {
+    throw error
+  }
+}
+
+export const authTokenValid = () => {
+  const tokenData = getTokenData()
+  if (!tokenData) return false
+  const tokenDataJson = JSON.parse(tokenData)
+  const tokenTimestamp = tokenDataJson.expires
+  if (!tokenTimestamp) return false
+  // console.log('tokenTimestamp:', tokenTimestamp)
+  // console.log('Date.now():', Date.now())
+  // console.log('Date.now() <= tokenTimestamp:', Date.now() <= tokenTimestamp)
+  return Date.now() <= tokenTimestamp
 }
 
 /*
