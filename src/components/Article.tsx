@@ -13,7 +13,7 @@ import { defaultArticle, defaultFlashMessage, defaultContentText, defaultTitleTe
 
 // import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect'
 
-const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Element => {
+const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, wrapperRef }): JSX.Element => {
   const params = useParams<{ id: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -222,7 +222,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Ele
   }
 
   return (
-    <Layout loading={loading} theme={theme} setTheme={setTheme}>
+    <Layout loading={loading} theme={theme} setTheme={setTheme} wrapperRef={wrapperRef}>
       <div>
         {flashMessage.visible && (
           <FlashMessage
