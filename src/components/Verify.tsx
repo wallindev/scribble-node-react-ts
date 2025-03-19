@@ -10,7 +10,7 @@ import { consoleError, dismissFlashMessage, scrollSmoothlyToTop } from '../utils
 import { defaultFlashMessage } from '../utils/defaults'
 import { login } from '../utils/functions'
 
-const Verify: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Element => {
+const Verify: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, wrapperRef }): JSX.Element => {
   const navigate = useNavigate()
   const params = useParams<{ verifyToken: string }>()
   const [flashMessage, setFlashMessage] = useState<TFlashMessage>(defaultFlashMessage)
@@ -79,7 +79,7 @@ const Verify: FC<IGlobal> = ({ loading, setLoading, theme, setTheme }): JSX.Elem
   }, [])
 
   return (
-    <Layout loading={loading} theme={theme} setTheme={setTheme}>
+    <Layout loading={loading} theme={theme} setTheme={setTheme} wrapperRef={wrapperRef}>
       <div>
         {flashMessage.visible ? <FlashMessage
             message={flashMessage.message}
