@@ -4,9 +4,9 @@ import DelayedLink from './shared/DelayedLink'
 import { LinkType } from '../types/general.types'
 import type { IGlobal } from '../types/general.types'
 
-const Home: FC<IGlobal> = ({ loading, theme, setTheme, wrapperRef }): JSX.Element => {
+const Home: FC<IGlobal> = ({ loading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
   return (
-    <Layout loading={loading} theme={theme} setTheme={setTheme} wrapperRef={wrapperRef}>
+    <Layout loading={loading} theme={theme} setTheme={setTheme} flashMessage={flashMessage} setFlashMessage={setFlashMessage} wrapperRef={wrapperRef}>
       <div>
         <h1 className="text-2xl font-bold mb-4">Welcome to Your Home Page!</h1>
         <p className="mb-2">
