@@ -5,76 +5,36 @@ import type { FC, JSX } from 'react'
 import type { AxiosError, AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import CustomButton from './shared/CustomButton'
-import FlashMessage from './shared/FlashMessage'
 import TextLink from './shared/TextLink'
-import type { TArticle, IGlobal, TFlashMessage } from '../types/general.types'
-import { consoleError, dismissFlashMessage, getAuthToken, localDateStr, logout } from '../utils/functions'
-import { defaultFlashMessage } from '../utils/defaults'
+import { TokenType } from '../types/general.types'
+import type { TArticle, IGlobal } from '../types/general.types'
+import { consoleError, handleHttpError } from '../utils/functions'
+import { defaultFlashMessage, defaultRequestConfig } from '../utils/defaults'
 
-const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, wrapperRef }): JSX.Element => {
+const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
   const navigate = useNavigate()
   const [articles, setArticles] = useState<TArticle[]>([])
-  const [flashMessage, setFlashMessage] = useState<TFlashMessage>(defaultFlashMessage)
 
   // Load articles
   useEffect(() => {
     !(async (): Promise<void> => {
       setLoading!(true)
-      let error
+      let httpError
       try {
-        const response: AxiosResponse = await axios.get('/articles', {
-          headers: {
-            Authorization: `Bearer ${getAuthToken()}`
-          }
-        })
+        const response: AxiosResponse = await axios.get('/articles', defaultRequestConfig)
         if (response.status === HttpStatusCode.Ok && response.data) {
           setArticles(response.data)
         }
-      } catch (e) {
-        if (isAxiosError(e)) {
-          error = e as AxiosError
-          console.error(`Error fetching articles: ${error}`)
-          const nestedError = (error.response as AxiosResponse)?.data?.error
-          // console.log('error.name:', nestedError.name)
-          // console.log('error.message:', nestedError.message)
-          // console.log('error.stack:', nestedError.stack)
-          // console.error('nestedError:', nestedError)
-          if (nestedError?.name === 'TokenExpiredError') {
-            // console.error('[Nested] TokenExpiredError: Token expired:', nestedError || '')
-            console.log('nestedError.name:', nestedError.name)
-            console.log('nestedError.message:', nestedError.message)
-            console.log('nestedError.expiredAt:', localDateStr(nestedError.expiredAt))
-            setFlashMessage({
-              message: 'Session has expired. Logging out...',
-              type: 'warning',
-              visible: true,
-            })
-            setTimeout(() => {
-              logout()
-              setFlashMessage(defaultFlashMessage)
-              navigate('/')
-            }, 3000)
-          } else if (nestedError?.name === 'JsonWebTokenError') {
-            console.error('[Nested] JsonWebTokenError: Token malformed:', nestedError || '')
-            setFlashMessage({
-              message: 'Session verification failed. Try logging out and in again.',
-              type: 'warning',
-              visible: true,
-            })
-          } else {
-            console.error('Unknown error:', nestedError || '')
-            setFlashMessage({
-              message: 'Session unexpectedly ended. Try logging out and in again.',
-              type: 'warning',
-              visible: true,
-            })
-          }
-        }
+      } catch (error) {
+        handleHttpError(httpError, error, setFlashMessage, defaultFlashMessage, TokenType.Auth, navigate)
       } finally {
         // To mock slow network
         // setTimeout(() => {
           setLoading!(false)
         // }, 5000)
+      }
+      if (!httpError/*  && articles|response.data etc */) {
+        // If everything went well, do this
       }
     })()
   }, [articles.length])
@@ -83,11 +43,7 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, wrapperRe
     if (confirm(`Do you really want to delete article '${artcl.title}'`)) {
       let error
       try {
-        const response: AxiosResponse = await axios.delete(`${'/articles'}/${artcl.id}`, {
-          headers: {
-            Authorization: `Bearer ${getAuthToken()}`,
-          },
-        })
+        const response: AxiosResponse = await axios.delete(`${'/articles'}/${artcl.id}`, defaultRequestConfig)
         if (response.status === HttpStatusCode.Ok && response.data) {
           setArticles(response.data)
         }
@@ -128,29 +84,20 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, wrapperRe
   }
 
   return (
-    <Layout loading={loading} theme={theme} setTheme={setTheme} wrapperRef={wrapperRef}>
-      {flashMessage.visible && (
-        <FlashMessage
-          message={flashMessage.message}
-          type={flashMessage.type}
-          onDismiss={() => dismissFlashMessage(flashMessage, setFlashMessage)}
-        />
-      )}
-      <div className="mt-0 m-2 mx-auto">
-        <h1 className="text-2xl font-bold mb-4">Articles</h1>
-        <CustomButton className="my-2" onClick={() => navigate('/articles/new')}>New Article &raquo;</CustomButton>
-        <div className="m-2">
-          {articles.map((article) => (
-            <div className="my-2 flex flex-row justify-between items-center border-0 border-b-1" key={article.id}>
-              <div className="my-1" key={`t${article.id}`}>
-                <TextLink className="text-xl" to={`/articles/${article.id}`} style={{ fontSize: '20px' }}>{article.title}</TextLink>
-              </div>
-              <div className="my-1" key={`d${article.id}`}>
-                <CustomButton onClick={() => deleteArticle(article)}>Delete</CustomButton>
-              </div>
+    <Layout loading={loading} theme={theme} setTheme={setTheme} flashMessage={flashMessage} setFlashMessage={setFlashMessage} wrapperRef={wrapperRef}>
+      <h1 className="text-2xl font-bold mb-4">Articles</h1>
+      <CustomButton className="my-2" onClick={() => navigate('/articles/new')}>New Article &raquo;</CustomButton>
+      <div className="m-2">
+        {articles.map((article) => (
+          <div className="my-2 flex flex-row justify-between items-center border-0 border-b-1" key={article.id}>
+            <div className="my-1" key={`t${article.id}`}>
+              <TextLink className="text-xl" to={`/articles/${article.id}`} style={{ fontSize: '20px' }}>{article.title}</TextLink>
             </div>
-          ))}
-        </div>
+            <div className="my-1" key={`d${article.id}`}>
+              <CustomButton onClick={() => deleteArticle(article)}>Delete</CustomButton>
+            </div>
+          </div>
+        ))}
       </div>
     </Layout>
   )
