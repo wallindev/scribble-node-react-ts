@@ -5,40 +5,33 @@ import type { FocusEvent, FC, JSX, KeyboardEvent, KeyboardEventHandler } from 'r
 import type { AxiosError, AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import CustomButton from './shared/CustomButton'
-import FlashMessage from './shared/FlashMessage'
 import { Mode } from '../types/general.types'
-import type { IGlobal, Mode as TMode, TFlashMessage, TArticle } from '../types/general.types'
-import { consoleError, dismissFlashMessage, getAuthToken, getUserId, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
-import { defaultArticle, defaultFlashMessage, defaultContentText, defaultTitleText } from '../utils/defaults'
+import type { IGlobal, Mode as TMode, TArticle } from '../types/general.types'
+import { consoleError, getUserId, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
+import { defaultArticle, defaultFlashMessage, defaultContentText, defaultTitleText, defaultRequestConfig } from '../utils/defaults'
 
 // import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect'
 
-const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, wrapperRef }): JSX.Element => {
+const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
   const params = useParams<{ id: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const [article, setArticle] = useState<TArticle>(defaultArticle)
-  const [flashMessage, setFlashMessage] = useState<TFlashMessage>(defaultFlashMessage)
   const [articleMode, setArticleMode] = useState<TMode>(Mode.Edit)
   const divTitleRef = useRef<HTMLDivElement>(null)
   const divContentRef = useRef<HTMLDivElement>(null)
 
+  // This useEffect fires on every re-render
   useEffect(() => {
     // console.log('useEffect without dep')
+    // TODO: Should setPlaceholderTexts be here or in useEffect with empty dep array (componentDidMount/Once per mount)?
     articleMode === Mode.New && setPlaceholderTexts()
     // console.log("searchParams.has('edit'):", searchParams.has('edit'))
     // console.log('params.id:', params.id)
     setArticleMode(searchParams.has('edit') ? Mode.Edit : params.id ? Mode.Show : Mode.New)
   })
 
-  // useEffect(() => {
-  //   console.log('useEffect with empty dep')
-  // }, [])
-
   useEffect(() => {
-    // TODO: Check if setFlashMessage and setPlaceholderTexts work correctly
-    // console.log(Mode[articleMode])
-    articleMode === Mode.Show && setFlashMessage(defaultFlashMessage)
     if (params.id) {
       if (!Number.isInteger(Number(params.id))) {
         setFlashMessage({
@@ -51,11 +44,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, wrapperRef
           setLoading!(true)
           let error
           try {
-            const response: AxiosResponse = await axios.get(`/articles/${params.id}`, {
-              headers: {
-                Authorization: `Bearer ${getAuthToken()}`,
-              },
-            })
+            const response: AxiosResponse = await axios.get(`/articles/${params.id}`, defaultRequestConfig)
             if (response.status === HttpStatusCode.Ok && response.data) {
               setArticle(response.data)
             }
@@ -115,11 +104,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, wrapperRef
   const updateArticle = async (artcl: Partial<TArticle>): Promise<void> => {
     let error
     try {
-      const response: AxiosResponse = await axios.patch(`/articles/${params.id}`, artcl, {
-        headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
-        },
-      })
+      const response: AxiosResponse = await axios.patch(`/articles/${params.id}`, artcl, defaultRequestConfig)
       if (response.status === HttpStatusCode.Ok && response.data) {
         setArticle(response.data)
       }
@@ -160,11 +145,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, wrapperRef
     let error, newArticleId: number
     try {
       // console.log('params.id:', params.id)
-      const response: AxiosResponse = await axios.post('/articles', artcl, {
-        headers: {
-          Authorization: `Bearer ${getAuthToken()}`
-        }
-      })
+      const response: AxiosResponse = await axios.post('/articles', artcl, defaultRequestConfig)
       // console.log('response.data:', response.data)
       if (response.status === HttpStatusCode.Created && response.data) {
         setArticle(response.data)
@@ -222,49 +203,40 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, wrapperRef
   }
 
   return (
-    <Layout loading={loading} theme={theme} setTheme={setTheme} wrapperRef={wrapperRef}>
-      <div>
-        {flashMessage.visible && (
-          <FlashMessage
-            message={flashMessage.message}
-            type={flashMessage.type}
-            onDismiss={() => dismissFlashMessage(flashMessage, setFlashMessage)}
-          />
-        )}
-        {/* article.title && article.content ? <> */}
-        <h3 className="text-2xl font-bold mb-4">{articleMode === Mode.Edit ? 'Edit ' : articleMode === Mode.New ? 'New ' : ''}Article</h3>
-        <div
-          ref={divTitleRef}
-          className={`${articleMode !== Mode.Show ? 'inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 ' : ''}block text-2xl mb-4`}
-          dangerouslySetInnerHTML={{ __html: article.title }}
-          contentEditable={articleMode !== Mode.Show ? true : false}
-          onFocus={(e: FocusEvent<HTMLDivElement>) => { articleMode === Mode.New ? selectElementText(e.target, defaultTitleText) : undefined }}
-          onKeyDown={keyDownOnElement}
-        />
-        <div
-          ref={divContentRef}
-          className={`${articleMode !== Mode.Show ? 'inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 ' : ''}min-h-32 block mt-2 mb-4`}
-          dangerouslySetInnerHTML={{ __html: replaceNewlinesWithBr(article.content) }}
-          contentEditable={articleMode !== Mode.Show ? true : false}
-          onFocus={(e: FocusEvent<HTMLDivElement>) => { articleMode === Mode.New ? selectElementText(e.target, defaultContentText) : undefined }}
-        />
-        <div className="flex justify-between items-center mb-4 text-xs">
-          <div>Created: {localDateStr(article.created)}</div>
-          <div>Modified: {localDateStr(article.modified)}</div>
-        </div>
-        {articleMode === Mode.Show ? (
-          <>
-            <CustomButton onClick={() => navigate('/articles')} className="mr-4">&laquo; All Articles</CustomButton>
-            <CustomButton onClick={() => navigate('?edit')}>Edit</CustomButton>
-          </>
-        ) : (
-          <>
-            <CustomButton type="button" onClick={() => articleMode === Mode.Edit ? navigate(`/articles/${params.id}`) : navigate('/articles')}>&laquo; Cancel</CustomButton>
-            <CustomButton type="submit" onClick={saveArticle} className="ml-4">{articleMode === Mode.Edit ? 'Update' : 'Save'}</CustomButton>
-          </>
-        )}
-        {/* </> : <CustomButton onClick={() => navigate('/articles')} className="mr-4">&laquo; All Articles</CustomButton> */}
+    <Layout loading={loading} theme={theme} setTheme={setTheme} flashMessage={flashMessage} setFlashMessage={setFlashMessage} wrapperRef={wrapperRef}>
+      {/* article.title && article.content ? <> */}
+      <h3 className="text-2xl font-bold mb-4">{articleMode === Mode.Edit ? 'Edit ' : articleMode === Mode.New ? 'New ' : ''}Article</h3>
+      <div
+        ref={divTitleRef}
+        className={`${articleMode !== Mode.Show ? 'inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 ' : ''}block text-2xl mb-4`}
+        dangerouslySetInnerHTML={{ __html: article.title }}
+        contentEditable={articleMode !== Mode.Show ? true : false}
+        onFocus={(e: FocusEvent<HTMLDivElement>) => { articleMode === Mode.New ? selectElementText(e.target, defaultTitleText) : undefined }}
+        onKeyDown={keyDownOnElement}
+      />
+      <div
+        ref={divContentRef}
+        className={`${articleMode !== Mode.Show ? 'inset-shadow-[2px_2px_5px_rgba(0,0,0,0.3)] p-2 ' : ''}min-h-32 block mt-2 mb-4`}
+        dangerouslySetInnerHTML={{ __html: replaceNewlinesWithBr(article.content) }}
+        contentEditable={articleMode !== Mode.Show ? true : false}
+        onFocus={(e: FocusEvent<HTMLDivElement>) => { articleMode === Mode.New ? selectElementText(e.target, defaultContentText) : undefined }}
+      />
+      <div className="flex justify-between items-center mb-4 text-xs">
+        <div>Created: {localDateStr(article.created)}</div>
+        <div>Modified: {localDateStr(article.modified)}</div>
       </div>
+      {articleMode === Mode.Show ? (
+        <>
+          <CustomButton onClick={() => navigate('/articles')} className="mr-4">&laquo; All Articles</CustomButton>
+          <CustomButton onClick={() => navigate('?edit')}>Edit</CustomButton>
+        </>
+      ) : (
+        <>
+          <CustomButton type="button" onClick={() => articleMode === Mode.Edit ? navigate(`/articles/${params.id}`) : navigate('/articles')}>&laquo; Cancel</CustomButton>
+          <CustomButton type="submit" onClick={saveArticle} className="ml-4">{articleMode === Mode.Edit ? 'Update' : 'Save'}</CustomButton>
+        </>
+      )}
+      {/* </> : <CustomButton onClick={() => navigate('/articles')} className="mr-4">&laquo; All Articles</CustomButton> */}
     </Layout>
   )
 }
