@@ -10,12 +10,14 @@ import User from './components/User'
 import Articles from './components/Articles'
 import Article from './components/Article'
 import ProtectedRoute from './components/ProtectedRoute'
-import { Theme } from './types/general.types'
+import { Theme, TFlashMessage } from './types/general.types'
+import { defaultFlashMessage } from './utils/defaults'
 import './utils/config'
 
 const App: FC = (): JSX.Element => {
   const [theme, setTheme] = useState<Theme>(Theme.Default)
   const [loading, setLoading] = useState<boolean>(false)
+  const [flashMessage, setFlashMessage] = useState<TFlashMessage>(defaultFlashMessage)
   const wrapperRef = useRef<HTMLInputElement>(null)
 
   // Check if user stored theme before
@@ -29,6 +31,8 @@ const App: FC = (): JSX.Element => {
     setTheme,
     loading,
     setLoading,
+    flashMessage,
+    setFlashMessage,
     wrapperRef
   }
 
