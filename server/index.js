@@ -1,25 +1,39 @@
 import { join, resolve } from 'node:path'
 import express from 'express'
 import cors from 'cors'
-import jwt from 'jsonwebtoken'
 import { existsSync as fileExists } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { HttpStatusCode } from 'axios'
 import { JSONFilePreset } from 'lowdb/node'
-import { envFileVars, envConfigVars, IS_LIVE, NODE_ENV, RUN_ENV, PROD_ENV } from './config.js'
-import { __dirname } from './constants.js'
-import { comparePassword, generateToken, getMaxId, hashPassword, localDateStr, readToken, secretKey, sendVerifyEmail, validateToken } from './functions.js'
+import { __dirname, IS_LIVE, NODE_ENV, RUN_ENV, PROD_ENV, BUILD_DIR } from './constants.js'
+import { envFileVars, envConfigVars } from './config.js'
+import { comparePassword, generateToken, getMaxId, hashPassword, localDateStr, readToken, sendVerifyEmail, validateToken, validateTokenDataFromHeader, readTokenDataFromHeader } from './functions.js'
 // import './config.js'
 
+/*
+ * Global variables
+ *
+ */
+
 // Directories and files
-const BUILD_DIR = 'dist'
 const buildPath = join(__dirname, '../', BUILD_DIR)
 const indexHtmlPath = join(__dirname, '../', PROD_ENV ? BUILD_DIR : '', 'index.html')
-console.log('\nbuildPath:', buildPath)
-console.log('indexHtmlPath:', indexHtmlPath)
-console.log("envConfigVars.DB_PATH:", envConfigVars.DB_PATH)
-const dbFilePath = resolve('./api-data/db.json')
-console.log('dbFilePath: ', dbFilePath)
+const dbFilePath = resolve(IS_LIVE ? envConfigVars.DB_PATH : envFileVars.DB_PATH)
+// console.log('\nbuildPath:', buildPath)
+// console.log('indexHtmlPath:', indexHtmlPath)
+// console.log('dbFilePath: ', dbFilePath)
+
+// Read db to memory
+const db = await JSONFilePreset(dbFilePath, { articles: [], users: [], tokens: [] })
+// console.log('db: ', db)
+// console.log('db.data: ', db.data)
+
+const onlyDigits = '([0-9]+)'
+
+/*
+ * Express Server Config
+ *
+ */
 
 // Express Server
 const app = express()
@@ -35,42 +49,6 @@ app.use('/api', api)
 // Static files
 app.use(express.static(buildPath))
 
-// Read db to memory
-const db = await JSONFilePreset(dbFilePath, { articles: [], users: [], tokens: [] })
-// console.log('db: ', db)
-// console.log('db.data: ', db.data)
-
-// const apiRoot = '/api'
-const onlyDigits = '([0-9]+)'
-
-const decodeTokenDataFromHeader = async (headers) => {
-  const authHeader = headers.authorization
-  if (!authHeader) return res.status(HttpStatusCode.Unauthorized).json({ message: 'Authorization header missing' })
-  const token = authHeader.split(' ')[1]
-  if (!token) return res.status(HttpStatusCode.Unauthorized).json({ message: 'Token missing from authorization header' })
-  try {
-    const decodedTokenData = await validateToken(token)
-    // console.log('decodedTokenData:', decodedTokenData)
-    return decodedTokenData
-  } catch (error) {
-    throw error
-  }
-}
-
-const readTokenDataFromHeader = (headers) => {
-  const authHeader = headers.authorization
-  if (!authHeader) return res.status(HttpStatusCode.Unauthorized).json({ message: 'Authorization header missing' })
-  const token = authHeader.split(' ')[1]
-  if (!token) return res.status(HttpStatusCode.Unauthorized).json({ message: 'Token missing from authorization header' })
-  try {
-    const tokenData = readToken(token)
-    // console.log('tokenData:', tokenData)
-    return tokenData
-  } catch (error) {
-    throw error
-  }
-}
-
 /*
  * Middlewares
  *
@@ -79,7 +57,7 @@ const readTokenDataFromHeader = (headers) => {
 // Authentication middleware
 const authenticate = async (req, res, next) => {
   try {
-    const decodedTokenData = await decodeTokenDataFromHeader(req.headers)
+    const decodedTokenData = await validateTokenDataFromHeader(req.headers)
     const { userId, iat, exp } = decodedTokenData
     const issued = localDateStr(new Date(iat * 1000))
     const expires = localDateStr(new Date(exp * 1000))
@@ -102,14 +80,14 @@ const authenticate = async (req, res, next) => {
 
 // Default article id param check
 api.use(`/articles/:id${onlyDigits}`, authenticate, (req, res, next) => {
-  if (!Number.isInteger(Number(req.params.id)))
+  if (!Number.isInteger(Number(req.params?.id)))
     return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid Article Id' })
   next()
 })
 
 // Default user id param check
-api.use([`/users/:id${onlyDigits}`/* , `/profile/:id${onlyDigits}` */], authenticate, (req, res, next) => {
-  if (!Number.isInteger(Number(req.params.id)))
+api.use(`/users/:id${onlyDigits}`, authenticate, (req, res, next) => {
+  if (!Number.isInteger(Number(req.params?.id)))
     return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid User Id' })
   next()
 })
@@ -117,11 +95,8 @@ api.use([`/users/:id${onlyDigits}`/* , `/profile/:id${onlyDigits}` */], authenti
 // User id on protected resources
 api.use(['/articles', '/users'], authenticate, (req, res, next) => {
   // console.log('\nreq.user?.userId:', req.user?.userId)
-  if (!req.user?.userId) {
-    // TODO: Check this, using jwt directly like below can cause unexpected problems!
-    // const error = new jwt.TokenExpiredError('User Id Missing: Token Expired', new Date())
+  if (!req.user?.userId)
     return res.status(HttpStatusCode.Unauthorized).json({ message: 'userId missing' })
-  }
   next()
 })
 
@@ -330,7 +305,7 @@ api.post('/register', async (req, res) => {
 // Verify user with email token, and set/send auth token
 api.get('/verify', async (req, res) => {
   let { token } = req.query
-  console.log('token:', token)
+  // console.log('token:', token)
   if (!token)
     return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid token' })
 
@@ -361,9 +336,16 @@ api.get('/verify', async (req, res) => {
 
   const userId = db.data.users[usersIndex].id
   const authToken = await generateToken(userId)
-  console.log('userId:', userId)
-  console.log('authToken:', authToken)
-  res.status(HttpStatusCode.Ok).json({ userId, authToken })
+  // console.log('userId:', userId)
+  // console.log('authToken:', authToken)
+  const { _, iat, exp } = readToken(authToken)
+  const issued = iat * 1000
+  const expires = exp * 1000
+  // console.log('issued (secs):', iat)
+  // console.log('expires (secs):', exp)
+  // console.log('issued (millisecs):', issued)
+  // console.log('expires (millisecs):', expires)
+  res.status(HttpStatusCode.Ok).json({ userId, authToken, issued, expires })
 })
 
 // Log in user with email and password, and set/send auth token
@@ -378,7 +360,7 @@ api.post('/login', async (req, res) => {
 
   // Next step, to have a server cookie and handle all
   // authentication and authorization on the server
-  // const token = jwt.sign({ userId: user.id }, env('SECRET_AUTH'), { expiresIn: '1h' })
+  // const token = generateToken({ userId: user.id }, env('SECRET_AUTH'), { expiresIn: '1h' })
   // const token = generateToken(user.id)
   // res.cookie('authToken', token, {
   //   httpOnly: true,
@@ -388,35 +370,34 @@ api.post('/login', async (req, res) => {
 
   const userId = user.id
   const authToken = await generateToken(userId)
-  console.log('userId:', userId)
-  console.log('authToken:', authToken)
+  // console.log('userId:', userId)
+  // console.log('authToken:', authToken)
   const { _, iat, exp } = readToken(authToken)
   const issued = iat * 1000
   const expires = exp * 1000
-  console.log('issued (secs):', iat)
-  console.log('expires (secs):', exp)
-  console.log('issued (millisecs):', issued)
-  console.log('expires (millisecs):', expires)
+  // console.log('issued (secs):', iat)
+  // console.log('expires (secs):', exp)
+  // console.log('issued (millisecs):', issued)
+  // console.log('expires (millisecs):', expires)
   res.status(HttpStatusCode.Ok).json({ userId, authToken, issued, expires })
 })
 
 // Route only used to view auth token
 api.get('/token', (req, res) => {
   try {
-    const { userId, iat, exp } = readTokenDataFromHeader(req.headers)
-    const issued = localDateStr(new Date(iat * 1000))
-    const expires = localDateStr(new Date(exp * 1000))
-    console.log('\nToken data')
-    console.log('------------')
-    console.log('User id:', userId)
-    console.log('Issued:', issued)
-    console.log('Expires:', expires)
-    const authToken = { userId, issued, expires }
-    console.log('authToken:', authToken)
-    res.status(HttpStatusCode.Ok).json({ authToken})
+    const tokenData = readTokenDataFromHeader(req.headers)
+    console.log('tokenData:', tokenData)
+    if (!tokenData)
+      return res.status(HttpStatusCode.Unauthorized).json({ message: 'Authorization header or token missing' })
+    if (!tokenData.exp || !Number.isInteger(tokenData.exp))
+      return res.status(HttpStatusCode.Unauthorized).json({ message: 'Authorization header expire timestamp corrupt' })
+    const tokenTimestamp = tokenData.exp * 1000
+    const authenticated = Date.now() <= tokenTimestamp
+    console.log('authenticated:', authenticated)
+    res.status(HttpStatusCode.Ok).json({ authenticated })
   } catch (error) {
     console.error('Token read failed:', error.message)
-    return res.status(HttpStatusCode.Unauthorized).json({ error })
+    res.status(HttpStatusCode.Unauthorized).json({ error })
   }
 })
 
