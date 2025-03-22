@@ -1,11 +1,16 @@
 import type { FC, JSX } from 'react'
-import { MouseEvent } from 'react'
+import { MouseEvent, useEffect, useState } from 'react'
 import DelayedLink from './DelayedLink'
 import Logout from './Logout'
 import type { IMainNav } from '../../types/general.types'
 import { isAuthenticated } from '../../utils/functions'
+import { defaultRequestConfig } from '../../utils/defaults'
 
 const MainNav: FC<IMainNav> = ({ wrapperRef, subNavOpen, setSubNavOpen }): JSX.Element => {
+  const [authenticated, setAuthenticated] = useState<boolean>(false)
+  useEffect(() => {
+    isAuthenticated(setAuthenticated, defaultRequestConfig)
+  }, [])
 
   const toggleMenu = (e: MouseEvent<HTMLDivElement>): void => {
     setSubNavOpen!(!subNavOpen)
@@ -21,7 +26,7 @@ const MainNav: FC<IMainNav> = ({ wrapperRef, subNavOpen, setSubNavOpen }): JSX.E
         <div className="text-xl font-bold">
           <DelayedLink wrapperRef={wrapperRef} to="/" title="To Start Page">Scribble!</DelayedLink>
         </div>
-        {isAuthenticated() && <div className="flex items-center">
+        {authenticated && <div className="flex items-center">
           <div className="block sm:hidden cursor-pointer" onClick={(e: MouseEvent<HTMLDivElement>) => toggleMenu(e)}>
             <div className={burgerLinesUtilClasses}></div>
             <div className={burgerLinesUtilClasses}></div>
