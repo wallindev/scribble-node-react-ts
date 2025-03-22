@@ -30,6 +30,11 @@ export enum LinkType {
   Text
 }
 
+export enum TokenType {
+  Auth,
+  Verify
+}
+
 /*
  * Types
  *
@@ -88,6 +93,8 @@ export interface IGlobal {
   setTheme: Dispatch<SetStateAction<Theme>>
   loading: boolean
   setLoading?: Dispatch<SetStateAction<boolean>>
+  flashMessage: TFlashMessage
+  setFlashMessage: Dispatch<SetStateAction<TFlashMessage>>
   wrapperRef: RefObject<HTMLDivElement | null>
 }
 
@@ -96,6 +103,8 @@ export interface ILayout extends IGlobal {
   setTheme: Dispatch<SetStateAction<Theme>>
   loading: boolean
   setLoading?: Dispatch<SetStateAction<boolean>>
+  flashMessage: TFlashMessage
+  setFlashMessage: Dispatch<SetStateAction<TFlashMessage>>
   wrapperRef: RefObject<HTMLDivElement | null>
   children: ReactNode
 }
