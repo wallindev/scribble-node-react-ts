@@ -37,8 +37,6 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage,
   }, [])
 
   useEffect(() => {
-    // TODO: Check if setFlashMessage works correctly
-    userMode !== Mode.Edit && setFlashMessage(defaultFlashMessage)
     if (user.id) {
       !(async () => {
         setLoading!(true)
