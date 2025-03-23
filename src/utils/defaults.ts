@@ -1,4 +1,12 @@
 import { TArticle, TFlashMessage, TUser } from '../types/general.types'
+import { getAuthToken, hasAuthToken } from './functions'
+import type { AxiosRequestConfig } from 'axios'
+
+export const defaultRequestConfig: AxiosRequestConfig | any = hasAuthToken() ? {
+  headers: {
+    Authorization: `Bearer ${getAuthToken()}`
+  }
+} : {}
 
 export let defaultArticle: TArticle = {
   id: null,
