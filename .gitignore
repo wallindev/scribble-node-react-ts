@@ -23,6 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# Editor extensions
+.VSCodeCounter/**
+
 src/assets/fonts/**
 .env
 TODO.txt
