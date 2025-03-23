@@ -283,7 +283,7 @@ api.post('/register', async (req, res) => {
 
   // Insert into db and return to client
   try {
-    const verifyToken = await generateToken(email, 'verify')
+    const verifyToken = await generateToken({ userId: newId, email }, 'verify')
     // console.log('verifyToken:', verifyToken)
     let hostUrl = req.headers.origin
     if (!hostUrl)
@@ -335,7 +335,8 @@ api.get('/verify', async (req, res) => {
   }
 
   const userId = db.data.users[usersIndex].id
-  const authToken = await generateToken(userId)
+  const email = db.data.users[usersIndex].email
+  const authToken = await generateToken({ userId, email })
   // console.log('userId:', userId)
   // console.log('authToken:', authToken)
   const { _, iat, exp } = readToken(authToken)
@@ -369,7 +370,7 @@ api.post('/login', async (req, res) => {
   // })
 
   const userId = user.id
-  const authToken = await generateToken(userId)
+  const authToken = await generateToken({ userId, email })
   // console.log('userId:', userId)
   // console.log('authToken:', authToken)
   const { _, iat, exp } = readToken(authToken)
