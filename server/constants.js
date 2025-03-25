@@ -19,3 +19,6 @@ export const IS_LOCAL = process.env.RUN_ENV  === 'local'
 export const IS_LIVE  = !IS_LOCAL
 
 export const BUILD_DIR = 'dist'
+
+export const liveHostUrl = 'https://node-react-ts-33315b5eaefa.herokuapp.com'
+export const localHostUrl = 'http://localhost:5000'
