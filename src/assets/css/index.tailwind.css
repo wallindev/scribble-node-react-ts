@@ -9,7 +9,6 @@
 }
 
 @theme {
-
   /* Mycolor.space   */
   /* Purple?         */
   --color-1: #1f0660;
@@ -59,15 +58,12 @@
   --color-button-bg-hover: #0056b3;
   --color-button-outline: #007bff;
   --color-button-text: #f0f0f0;
+
+  --tw-duration: 1000;
+  --default-transition-duration: 1000;
 }
 
 @layer base {
-  /* :root {
-    --color-text: #ecececec;
-    --color-bg: #0f0f0f;
-    transition: background-color 0.5s ease, color 0.5s ease;
-  } */
-
   [data-theme='Default'] {
     --color-text: #ecececec;
     --color-text-hover: #b4b4b4b4;
