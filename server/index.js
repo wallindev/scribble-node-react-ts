@@ -5,7 +5,7 @@ import { existsSync as fileExists } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { HttpStatusCode } from 'axios'
 import { JSONFilePreset } from 'lowdb/node'
-import { __dirname, IS_LIVE, NODE_ENV, RUN_ENV, PROD_ENV, BUILD_DIR } from './constants.js'
+import { __dirname, IS_LIVE, NODE_ENV, RUN_ENV, PROD_ENV, BUILD_DIR, liveHostUrl, localHostUrl } from './constants.js'
 import { envFileVars, envConfigVars } from './config.js'
 import { comparePassword, generateToken, getMaxId, hashPassword, localDateStr, readToken, sendVerifyEmail, validateToken, validateTokenDataFromHeader, readTokenDataFromHeader } from './functions.js'
 // import './config.js'
@@ -254,58 +254,74 @@ api.patch(`/users/:id${onlyDigits}`, async (req, res) => {
 
 // Create/Register user
 api.post('/register', async (req, res) => {
-  const { firstName, lastName, email, password, passwordConfirm } = req.body
-  if (!firstName || !lastName || !email || !password || !passwordConfirm)
-    return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid user data' })
+  let hostUrl = req.headers.origin
+  if (!hostUrl)
+    hostUrl = IS_LIVE ? liveHostUrl : localHostUrl
 
-  if (password !== passwordConfirm) return res.status(HttpStatusCode.BadRequest).json({ message: 'Passwords not equal' })
+  const { reSend } = req.query
+  const { userId, email } = req.body
+  if (reSend !== undefined) {
+    if (!userId || !email)
+      return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid user data' })
 
-  // Build new User
-  const newId = await getMaxId(db, 'users') + 1
-  const newDate = localDateStr()
+    try {
+      const verifyToken = await generateToken({ userId, email }, 'verify')
+      await sendVerifyEmail(email, verifyToken, hostUrl)
+      res.status(HttpStatusCode.Ok).json({ userId, email })
+    } catch (error) {
+      console.error("Error generating new verify token:\n", error)
+      res.status(HttpStatusCode.InternalServerError).json({ message: 'Internal server error' })
+    }
+  } else {
+    const { firstName, lastName, email, password, passwordConfirm } = req.body
+    if (!firstName || !lastName || !email || !password || !passwordConfirm)
+      return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid user data' })
 
-  const hashedPasswordPlusSalt = await hashPassword(password)
-  const arrHashedPasswordPlusSalt = hashedPasswordPlusSalt.split('.')
-  const hashedPassword = arrHashedPasswordPlusSalt[0]
-  const salt = arrHashedPasswordPlusSalt[1]
+    if (password !== passwordConfirm) return res.status(HttpStatusCode.BadRequest).json({ message: 'Passwords not equal' })
 
-  const newUser = {
-    id: newId.toString(),
-    firstName,
-    lastName,
-    email,
-    emailVerified: false,
-    password: hashedPassword,
-    salt,
-    created: newDate,
-    modified: newDate
-  }
+    // Build new User
+    const newId = await getMaxId(db, 'users') + 1
+    const newDate = localDateStr()
 
-  // Insert into db and return to client
-  try {
-    const verifyToken = await generateToken({ userId: newId, email }, 'verify')
-    // console.log('verifyToken:', verifyToken)
-    let hostUrl = req.headers.origin
-    if (!hostUrl)
-      hostUrl = IS_LIVE ? 'https://node-react-ts-33315b5eaefa.herokuapp.com' : 'http://localhost:5000'
-    console.log('hostUrl:', hostUrl)
-    console.time('sendMail')
-    await sendVerifyEmail(email, verifyToken, hostUrl)
-    console.timeEnd('sendMail')
-    await db.read()
-    await db.update(({ users }) => users.push(newUser))
-    const userId = newUser.id
-    res.status(HttpStatusCode.Created).json({ userId })
-  } catch (error) {
-    console.error("Error creating user:\n", error)
-    res.status(HttpStatusCode.InternalServerError).json({ message: 'Internal server error' })
+    const hashedPasswordPlusSalt = await hashPassword(password)
+    const arrHashedPasswordPlusSalt = hashedPasswordPlusSalt.split('.')
+    const hashedPassword = arrHashedPasswordPlusSalt[0]
+    const salt = arrHashedPasswordPlusSalt[1]
+
+    const newUser = {
+      id: newId.toString(),
+      firstName,
+      lastName,
+      email,
+      emailVerified: false,
+      password: hashedPassword,
+      salt,
+      created: newDate,
+      modified: newDate
+    }
+
+    // Insert into db and return to client
+    try {
+      const verifyToken = await generateToken({ userId: newId, email }, 'verify')
+      // console.log('verifyToken:', verifyToken)
+      // console.log('hostUrl:', hostUrl)
+      console.time('sendMail')
+      await sendVerifyEmail(email, verifyToken, hostUrl)
+      console.timeEnd('sendMail')
+      await db.read()
+      await db.update(({ users }) => users.push(newUser))
+      const userId = newUser.id
+      res.status(HttpStatusCode.Created).json({ userId, email })
+    } catch (error) {
+      console.error("Error creating user or generating verify token:\n", error)
+      res.status(HttpStatusCode.InternalServerError).json({ message: 'Internal server error' })
+    }
   }
 })
 
 // Verify user with email token, and set/send auth token
 api.get('/verify', async (req, res) => {
   let { token } = req.query
-  // console.log('token:', token)
   if (!token)
     return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid token' })
 
@@ -313,8 +329,11 @@ api.get('/verify', async (req, res) => {
   try {
      decode = await validateToken(token, 'verify')
   } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
-      console.error('Token verification failed:', error.message)
+    if (error.name === 'TokenExpiredError') {
+      console.error('TokenExpiredError: Token verification failed:', error.message)
+      console.error('error.expiredAt:', localDateStr(error.expiredAt))
+    } else if (error.name === 'JsonWebTokenError') {
+      console.error('JsonWebTokenError: Token verification failed:', error.message)
     } else {
       console.error('Unexpected JWT Error:', error.message)
     }
@@ -337,16 +356,10 @@ api.get('/verify', async (req, res) => {
   const userId = db.data.users[usersIndex].id
   const email = db.data.users[usersIndex].email
   const authToken = await generateToken({ userId, email })
-  // console.log('userId:', userId)
-  // console.log('authToken:', authToken)
   const { _, iat, exp } = readToken(authToken)
   const issued = iat * 1000
   const expires = exp * 1000
-  // console.log('issued (secs):', iat)
-  // console.log('expires (secs):', exp)
-  // console.log('issued (millisecs):', issued)
-  // console.log('expires (millisecs):', expires)
-  res.status(HttpStatusCode.Ok).json({ userId, authToken, issued, expires })
+  res.status(HttpStatusCode.Ok).json({ userId, email, authToken, issued, expires })
 })
 
 // Log in user with email and password, and set/send auth token
@@ -354,16 +367,16 @@ api.post('/login', async (req, res) => {
   const { email, password } = req.body
   if (!email || !password) return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid user data' })
   const user = db.data.users.find(u => u.email === email)
-  if (!user || !user.id) res.status(HttpStatusCode.Unauthorized).json({ message: 'Invalid credentials' })
+  if (!user || !user.id) return res.status(HttpStatusCode.Unauthorized).json({ message: 'Invalid credentials' })
+  if (!user.emailVerified) return res.status(HttpStatusCode.Unauthorized).json({ message: 'Email not verified' })
 
   const passwordCompare = await comparePassword(password, user.password, user.salt)
-  if (!passwordCompare) res.status(HttpStatusCode.Unauthorized).json({ message: 'Password compare failed' })
+  if (!passwordCompare) return res.status(HttpStatusCode.Unauthorized).json({ message: 'Password compare failed' })
 
   // Next step, to have a server cookie and handle all
   // authentication and authorization on the server
-  // const token = generateToken({ userId: user.id }, env('SECRET_AUTH'), { expiresIn: '1h' })
-  // const token = generateToken(user.id)
-  // res.cookie('authToken', token, {
+  // const authToken = await generateToken({ userId, email })
+  // res.cookie('authToken', authToken, {
   //   httpOnly: true,
   //   sameSite: 'strict',
   //   secure: true, // Set to true in production (HTTPS)
@@ -371,16 +384,10 @@ api.post('/login', async (req, res) => {
 
   const userId = user.id
   const authToken = await generateToken({ userId, email })
-  // console.log('userId:', userId)
-  // console.log('authToken:', authToken)
   const { _, iat, exp } = readToken(authToken)
   const issued = iat * 1000
   const expires = exp * 1000
-  // console.log('issued (secs):', iat)
-  // console.log('expires (secs):', exp)
-  // console.log('issued (millisecs):', issued)
-  // console.log('expires (millisecs):', expires)
-  res.status(HttpStatusCode.Ok).json({ userId, authToken, issued, expires })
+  res.status(HttpStatusCode.Ok).json({ userId, email, authToken, issued, expires })
 })
 
 // Route only used to view auth token
@@ -422,12 +429,12 @@ app.get('*', async (_, res) => {
 
 // Start server
 app.listen(IS_LIVE ? envConfigVars.PORT : envFileVars.PORT, () => {
-  console.log('\nenvFileVars:', envFileVars)
-
-  console.log('\nenvConfigVars:', envConfigVars)
+  // console.log('\nenvFileVars:', envFileVars)
+  // console.log('\nenvConfigVars:', envConfigVars)
 
   console.log(`\nBuild env: ${NODE_ENV}`)
   console.log(`Running env: ${RUN_ENV}`)
+  console.log('\nEnv vars:', IS_LIVE ? envConfigVars : envFileVars)
 
   console.log(`\nAPI Server running on port ${IS_LIVE ? envConfigVars.PORT : envFileVars.PORT}`)
 
