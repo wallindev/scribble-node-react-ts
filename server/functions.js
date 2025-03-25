@@ -124,10 +124,8 @@ export const readToken = (token) => decodeJwtToken(token, IS_LIVE ? envConfigVar
 export const generateToken = async (payload, type = 'auth', options = {}) => {
   let secretKey = ''
   if (type === 'verify') {
-    payload = { email: payload }
     secretKey = IS_LIVE ? envConfigVars.SECRET_VERIFY : envFileVars.SECRET_VERIFY
   } else {
-    payload = { userId: payload }
     secretKey = IS_LIVE ? envConfigVars.SECRET_AUTH : envFileVars.SECRET_AUTH
   }
   return await signJwtToken(payload, secretKey, { expiresIn: '1h' })
@@ -136,10 +134,8 @@ export const generateToken = async (payload, type = 'auth', options = {}) => {
 export const validateToken = async (payload, type = 'auth') => {
   let secretKey = ''
   if (type === 'verify') {
-    // payload = { email: payload }
     secretKey = IS_LIVE ? envConfigVars.SECRET_VERIFY : envFileVars.SECRET_VERIFY
   } else {
-    // payload = { userId: payload }
     secretKey = IS_LIVE ? envConfigVars.SECRET_AUTH : envFileVars.SECRET_AUTH
   }
 
