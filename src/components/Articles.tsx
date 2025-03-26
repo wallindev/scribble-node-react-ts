@@ -26,7 +26,7 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMess
           setArticles(response.data)
         }
       } catch (error) {
-        handleHttpError(httpError, error, setFlashMessage, defaultFlashMessage, TokenType.Auth, navigate)
+        httpError = handleHttpError(error, setFlashMessage, defaultFlashMessage, TokenType.Auth, navigate)
       } finally {
         // To mock slow network
         // setTimeout(() => {
