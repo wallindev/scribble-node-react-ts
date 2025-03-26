@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios, { HttpStatusCode, isAxiosError } from 'axios'
+import axios, { HttpStatusCode } from 'axios'
 import type { ChangeEvent, FC, JSX, KeyboardEvent, KeyboardEventHandler } from 'react'
-import type { AxiosError, AxiosResponse } from 'axios'
+import type { AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import TextInput from './shared/TextInput'
 import CustomButton from './shared/CustomButton'
+import { TokenType } from '../types/general.types'
 import type { IGlobal } from '../types/general.types'
-import { consoleError, scrollSmoothlyToTop } from '../utils/functions'
+import { handleHttpError, scrollSmoothlyToTop } from '../utils/functions'
 import { defaultFlashMessage } from '../utils/defaults'
 
 const Register: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
@@ -19,7 +20,7 @@ const Register: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMess
   const [passwordConfirm, setPasswordConfirm] = useState<string>('')
 
   const handleRegister = async () => {
-    let error, userId
+    let httpError, userId, email
     try {
       setLoading!(true)
       scrollSmoothlyToTop()
@@ -31,28 +32,30 @@ const Register: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMess
       const response: AxiosResponse = await axios.post('/register', { firstName, lastName, email, password, passwordConfirm })
       if (response.status === HttpStatusCode.Created && response.data) {
         userId = response.data.userId
+        email = response.data.email
       }
-    } catch (e) {
-      if (isAxiosError(e)) {
-        error = e as AxiosError
-        consoleError(error)
-        setFlashMessage({
-          message: 'An error occured trying to register',
-          type: 'error',
-          visible: true,
-        })
-      } else {
-        console.error("Error trying to register:\n", error)
-        setFlashMessage({
-          message: `Error trying to register:<br />${error}`,
-          type: 'error',
-          visible: true,
-        })
-      }
+    } catch (error) {
+      httpError = handleHttpError(error, setFlashMessage, defaultFlashMessage, TokenType.Verify, navigate)
+      // if (isAxiosError(e)) {
+      //   error = e as AxiosError
+      //   consoleError(error)
+      //   setFlashMessage({
+      //     message: 'An error occured trying to register',
+      //     type: 'error',
+      //     visible: true,
+      //   })
+      // } else {
+      //   console.error("Error trying to register:\n", error)
+      //   setFlashMessage({
+      //     message: `Error trying to register:<br />${error}`,
+      //     type: 'error',
+      //     visible: true,
+      //   })
+      // }
     } finally {
       setLoading!(false)
     }
-    if (!error && userId) {
+    if (!httpError && userId && email) {
       setFlashMessage(defaultFlashMessage)
       setTimeout(() => {
         setFlashMessage({
