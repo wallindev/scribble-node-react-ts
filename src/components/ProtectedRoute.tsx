@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react'
+// import { useEffect, useState } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
 import type { FC, JSX } from 'react'
 import { isAuthenticated } from '../utils/functions'
-import { defaultRequestConfig } from '../utils/defaults'
+// import { defaultRequestConfig } from '../utils/defaults'
 
 const ProtectedRoute: FC = (): JSX.Element => {
-  const [authenticated, setAuthenticated] = useState<boolean>(false)
-  useEffect(() => {
-    isAuthenticated(setAuthenticated, defaultRequestConfig)
-  }, [])
+  // const [authenticated, setAuthenticated] = useState<boolean>(false)
+  // useEffect(() => {
+  //   isAuthenticated(setAuthenticated, defaultRequestConfig)
+  // }, [])
 
-  if (!authenticated) {
+  if (!isAuthenticated()) {
     return <Navigate to="/" />
   }
   return <Outlet />
