@@ -8,7 +8,7 @@ import CustomButton from './shared/CustomButton'
 import { Mode } from '../types/general.types'
 import type { IGlobal, Mode as TMode, TArticle } from '../types/general.types'
 import { consoleError, getUserId, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
-import { defaultArticle, defaultFlashMessage, defaultContentText, defaultTitleText, defaultRequestConfig } from '../utils/defaults'
+import { defaultArticle, defaultContentText, defaultTitleText, defaultRequestConfig } from '../utils/defaults'
 
 // import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect'
 
