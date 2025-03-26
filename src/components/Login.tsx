@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios, { HttpStatusCode, isAxiosError } from 'axios'
+import axios, { HttpStatusCode } from 'axios'
 import type { ChangeEvent, FC, JSX, KeyboardEvent, KeyboardEventHandler } from 'react'
-import type { AxiosError, AxiosResponse } from 'axios'
+import type { AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import TextInput from './shared/TextInput'
 import DelayedLink from './shared/DelayedLink'
-import { LinkType } from '../types/general.types'
+import { LinkType, TokenType } from '../types/general.types'
 import type { IGlobal } from '../types/general.types'
-import { consoleError, login, scrollSmoothlyToTop } from '../utils/functions'
+import { handleHttpError, login, scrollSmoothlyToTop } from '../utils/functions'
 import { defaultFlashMessage } from '../utils/defaults'
+import { FADE_IN_TIME, FADE_OUT_TIME } from '../utils/constants'
 
 const Login: FC<IGlobal> = ({ loading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
   const navigate = useNavigate()
@@ -26,35 +27,30 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme, flashMessage, setFlashMe
     try {
       const response: AxiosResponse = await axios.post('/login', { email, password })
       if (response.status === HttpStatusCode.Ok && response.data) {
-        const { userId, authToken, issued, expires } = response.data
-        // console.log('userId:', userId)
-        // console.log('authToken:', authToken)
-        // console.log('issued:', issued)
-        // console.log('expires:', expires)
-        if (!userId || !authToken || !issued || !expires) throw new Error("Missing Response data content")
-        tokenData = JSON.stringify({ userId, authToken, issued, expires })
-        // console.log('tokenData:', tokenData)
-        // console.log('JSON.parse(tokenData):', JSON.parse(tokenData))
+        const { userId, email, authToken, issued, expires } = response.data
+        if (!userId || !email || !authToken || !issued || !expires) throw new Error("Missing Response data content")
+        tokenData = JSON.stringify({ userId, email, authToken, issued, expires })
         login(tokenData)
       }
     } catch (error) {
-      if (isAxiosError(error))  {
-        httpError = error as AxiosError
-        consoleError(httpError)
-        setFlashMessage({
-          message: 'An error occured trying to log in',
-          type: 'error',
-          visible: true,
-        })
-      } else {
-        httpError = error as Error
-        console.error("Error trying to log in:", error)
-        setFlashMessage({
-          message: `Error trying to log in: ${error}`,
-          type: 'error',
-          visible: true,
-        })
-      }
+      httpError = handleHttpError(error, setFlashMessage, defaultFlashMessage, TokenType.Verify, navigate)
+      // if (isAxiosError(error))  {
+      //   httpError = error as AxiosError
+      //   consoleError(httpError)
+      //   setFlashMessage({
+      //     message: 'An error occured trying to log in',
+      //     type: 'error',
+      //     visible: true,
+      //   })
+      // } else {
+      //   httpError = error as Error
+      //   console.error("Error trying to log in:", error)
+      //   setFlashMessage({
+      //     message: `Error trying to log in: ${error}`,
+      //     type: 'error',
+      //     visible: true,
+      //   })
+      // }
     }
     if (!httpError && tokenData) {
       scrollSmoothlyToTop()
@@ -63,6 +59,12 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme, flashMessage, setFlashMe
         type: 'success',
         visible: true,
       })
+      // Initiate fade-out effect on wrapper div
+      setTimeout(() => {
+        const divWrapper = wrapperRef.current as HTMLDivElement
+        divWrapper.classList.replace(`duration-${FADE_IN_TIME}`, `duration-${FADE_OUT_TIME}`)
+        divWrapper.classList.replace('opacity-100', 'opacity-0')
+      }, 3000 - FADE_OUT_TIME)
       setTimeout(() => {
         navigate('/home')
         setFlashMessage(defaultFlashMessage)
@@ -103,8 +105,8 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme, flashMessage, setFlashMe
           onKeyDown={keyDownOnElement}
         />
         <div className="flex flex-row sm:items-start mt-4">
-          <DelayedLink wrapperRef={wrapperRef} linkType={LinkType.Button} className="max-sm:flex-1/2 mr-0.5 sm:mr-1" buttonType="button" to="/">&laquo; Cancel</DelayedLink>
-          <DelayedLink wrapperRef={wrapperRef} linkType={LinkType.Button} className="max-sm:flex-1/2 ml-0.5 sm:ml-1" type="button" onClick={handleLogin}>Login</DelayedLink>
+          <DelayedLink wrapperRef={wrapperRef} linkType={LinkType.Button} className="max-sm:flex-1/2 mr-0.5 sm:mr-1" to="/">&laquo; Cancel</DelayedLink>
+          <DelayedLink wrapperRef={wrapperRef} linkType={LinkType.Button} className="max-sm:flex-1/2 ml-0.5 sm:ml-1" to="/home" type="button" onClick={handleLogin}>Login</DelayedLink>
         </div>
       </div>
     </Layout>
