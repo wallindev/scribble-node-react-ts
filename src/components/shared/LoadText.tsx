@@ -29,7 +29,7 @@ const LoadText: FC<ILoadText> = ({ defaultText = 'Loading' }): JSX.Element => {
   }, [])
 
   return (
-    <div ref={textRef} className="m-0 sm:mx-auto p-2 sm:p-4 w-screen sm:max-w-160 /* max-sm:*/ h-screen flex flex-col bg-content-bg rounded-xl transition-opacity delay-0 duration-1000 opacity-0">
+    <div ref={textRef} className="m-0 sm:mx-auto p-2 sm:p-4 w-screen sm:max-w-160 /* max-sm:*/ h-screen flex flex-col bg-content-bg rounded-xl transition-opacity delay-0 duration-800 opacity-0">
       {displayText}
     </div>
   )
