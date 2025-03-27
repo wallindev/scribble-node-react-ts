@@ -9,7 +9,7 @@ import CustomButton from './shared/CustomButton'
 import { Mode } from '../types/general.types'
 import type { IGlobal, Mode as TMode, TUser } from '../types/general.types'
 import { consoleError, getAuthToken, getUserId, localDateStr, selectElementText } from '../utils/functions'
-import { defaultFlashMessage, defaultRequestConfig, defaultUser } from '../utils/defaults'
+import { defaultRequestConfig, defaultUser } from '../utils/defaults'
 
 const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
   const [searchParams, setSearchParams] = useSearchParams()
