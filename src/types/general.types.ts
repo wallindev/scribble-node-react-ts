@@ -1,4 +1,5 @@
 import type { CSSProperties, Dispatch, MouseEventHandler, ReactNode, RefObject, SetStateAction } from 'react'
+import { To } from 'react-router-dom'
 
 /*
  * Enums
@@ -121,16 +122,17 @@ export interface IDelayedLink {
   className?: string | (({ isActive }: { isActive: any }) => string)
   buttonType?: 'button' | 'submit' | 'reset'
   onClick?: MouseEventHandler<HTMLButtonElement>
+  // onClick?: () => void
   size?: 'small' | 'medium' | 'large'
   style?: CSSProperties
-  to?: string
+  to: To
   children: ReactNode
   [key: string]: any
 }
 
 export interface ITextLink {
   className? : string
-  to: string
+  to: To
   children?: ReactNode
   style?: CSSProperties
   [key: string]: any
