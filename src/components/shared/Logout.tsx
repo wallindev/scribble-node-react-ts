@@ -1,21 +1,18 @@
-import { useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
 import type { FC, JSX, MouseEvent } from 'react'
-import CustomButton from './CustomButton'
+import DelayedLink from './DelayedLink'
 import { logout } from '../../utils/functions'
 import type { ILogout } from '../../types/form.types'
+import { LinkType } from '../../types/general.types'
 
-const Logout: FC<ILogout> = ({ className, size = 'large', ...props }): JSX.Element => {
-  const navigate = useNavigate()
-
+const Logout: FC<ILogout> = ({  wrapperRef, className, size = 'large', ...props }): JSX.Element => {
   const handleLogout = (e: MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault()
     logout()
-    navigate('/')
   }
 
   return (
-    <CustomButton className={classNames('outline-0', className)} onClick={handleLogout} size={size} {...props}>Logout</CustomButton>
+    <DelayedLink buttonType="button" wrapperRef={wrapperRef} linkType={LinkType.Button} className={classNames('outline-0', className)} to="/" onClick={handleLogout} size={size} {...props}>Logout</DelayedLink>
   )
 }
 
