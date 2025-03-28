@@ -1,16 +1,16 @@
 import type { FC, JSX } from 'react'
-import { MouseEvent, useEffect, useState } from 'react'
+import { MouseEvent/* , useEffect, useState */ } from 'react'
 import DelayedLink from './DelayedLink'
 import Logout from './Logout'
 import type { IMainNav } from '../../types/general.types'
 import { isAuthenticated } from '../../utils/functions'
-import { defaultRequestConfig } from '../../utils/defaults'
+// import { defaultRequestConfig } from '../../utils/defaults'
 
 const MainNav: FC<IMainNav> = ({ wrapperRef, subNavOpen, setSubNavOpen }): JSX.Element => {
-  const [authenticated, setAuthenticated] = useState<boolean>(false)
-  useEffect(() => {
-    isAuthenticated(setAuthenticated, defaultRequestConfig)
-  }, [])
+  // const [authenticated, setAuthenticated] = useState<boolean>(false)
+  // useEffect(() => {
+  //   isAuthenticated(setAuthenticated, defaultRequestConfig)
+  // }, [])
 
   const toggleMenu = (e: MouseEvent<HTMLDivElement>): void => {
     setSubNavOpen!(!subNavOpen)
@@ -26,7 +26,7 @@ const MainNav: FC<IMainNav> = ({ wrapperRef, subNavOpen, setSubNavOpen }): JSX.E
         <div className="text-xl font-bold">
           <DelayedLink wrapperRef={wrapperRef} to="/" title="To Start Page">Scribble!</DelayedLink>
         </div>
-        {authenticated && <div className="flex items-center">
+        {isAuthenticated() && <div className="flex items-center">
           <div className="block sm:hidden cursor-pointer" onClick={(e: MouseEvent<HTMLDivElement>) => toggleMenu(e)}>
             <div className={burgerLinesUtilClasses}></div>
             <div className={burgerLinesUtilClasses}></div>
@@ -36,13 +36,13 @@ const MainNav: FC<IMainNav> = ({ wrapperRef, subNavOpen, setSubNavOpen }): JSX.E
             <li><DelayedLink wrapperRef={wrapperRef} to="/home" className={linkUtilClasses.replace('border-t-0', '')} title="To Home My Page">Home</DelayedLink></li>
             <li><DelayedLink wrapperRef={wrapperRef} to="/articles" className={linkUtilClasses} title="To My Articles Page">My Articles</DelayedLink></li>
             <li><DelayedLink wrapperRef={wrapperRef} to="/profile" className={linkUtilClasses} title="To My Profile Page">My Profile</DelayedLink></li>
-            <li className={`${linkUtilClasses} flex flex-col items-end`}><Logout size="medium" /></li>
+            <li className={`${linkUtilClasses} flex flex-col items-end`}><Logout wrapperRef={wrapperRef} size="medium" title="Logout of Scribble!" /></li>
           </ul>
           <ul className="hidden sm:flex list-none">
             <li><DelayedLink wrapperRef={wrapperRef} to="/home" className={linkUtilClasses} title="To Home My Page">Home</DelayedLink></li>
             <li><DelayedLink wrapperRef={wrapperRef} to="/articles" className={linkUtilClasses} title="To My Articles Page">My Articles</DelayedLink></li>
             <li><DelayedLink wrapperRef={wrapperRef} to="/profile" className={linkUtilClasses} title="To My Profile Page">My Profile</DelayedLink></li>
-            <li className="flex items-center"><Logout className="ml-2" size="small" title="Logout of Scribble!" /></li>
+            <li className="flex items-center"><Logout className="ml-2" wrapperRef={wrapperRef} size="small" title="Logout of Scribble!" /></li>
           </ul>
         </div>}
       </div>
