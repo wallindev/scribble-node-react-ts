@@ -1,7 +1,7 @@
 // import { useState } from 'react'
-import axios, { isAxiosError } from 'axios'
+import /* axios,  */{ isAxiosError } from 'axios'
 import type { Dispatch, SetStateAction } from 'react'
-import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
+import type { AxiosError/* , AxiosRequestConfig */, AxiosResponse } from 'axios'
 import { TFlashMessage, TokenType } from '../types/general.types'
 import type { NavigateFunction } from 'react-router-dom'
 
@@ -69,8 +69,8 @@ export const getUserEmail = (): string | null => {
   const tokenData = getTokenData()
   if (!tokenData) return null
   const tokenDataJson = JSON.parse(tokenData)
-  if (!tokenDataJson.userEmail) return null
-  return tokenDataJson.userEmail
+  if (!tokenDataJson.email) return null
+  return tokenDataJson.email
 }
 
 export const hasUserEmail = (): boolean => getUserEmail() !== null
@@ -98,16 +98,18 @@ export const authTokenValid = (): boolean => {
 
 // Helper function to check authentication status
 // TODO: Change this to server-only cookie
-export const isAuthenticated = (setAuth: Dispatch<SetStateAction<boolean>>, defaultRequestConfig?: AxiosRequestConfig | {}): boolean | void => {
+// export const isAuthenticated = (setAuth: Dispatch<SetStateAction<boolean>>, defaultRequestConfig?: AxiosRequestConfig | {}): boolean | void => {
+export const isAuthenticated = (): boolean => {
+  return hasUserId() && hasAuthToken() && authTokenValid()
   /*
    * Client authentication
    *
    */
-  if (hasUserId() && hasAuthToken() && authTokenValid()) {
-    setAuth(true)
-  } else {
-    setAuth(false)
-  }
+  // if (hasUserId() && hasAuthToken() && authTokenValid()) {
+  //   setAuth(true)
+  // } else {
+  //   setAuth(false)
+  // }
 
   /*
    * Server authentication
@@ -134,7 +136,8 @@ export const localDateStr = (dateStr?: string | number | Date | null): string =>
   return date.toLocaleString("sv-SE", { timeZone: "Europe/Stockholm" })
 }
 
-export const handleHttpError = (httpError: any, error: any, setFlashMessage?: Dispatch<SetStateAction<TFlashMessage>>, defaultFlashMessage?: any, tokenType?: TokenType, navigate?: NavigateFunction) => {
+export const handleHttpError = (error: any, setFlashMessage?: Dispatch<SetStateAction<TFlashMessage>>, defaultFlashMessage?: any, tokenType?: TokenType, navigate?: NavigateFunction): AxiosError | any => {
+  let httpError
   if (isAxiosError(error)) {
     httpError = error as AxiosError
     const nestedError = (httpError.response as AxiosResponse)?.data?.error
@@ -216,6 +219,7 @@ export const handleHttpError = (httpError: any, error: any, setFlashMessage?: Di
       })
     }
   }
+  return httpError
 }
 
 
