@@ -14,7 +14,6 @@ const StartPage: FC<IGlobal> = ({ loading, theme, setTheme, flashMessage, setFla
   // }, [])
   return (
     <Layout loading={loading} theme={theme} setTheme={setTheme} flashMessage={flashMessage} setFlashMessage={setFlashMessage} wrapperRef={wrapperRef}>
-      <>{console.log('rendering') /* TODO: Remove */}</>
       <h1 className="text-2xl font-bold">Welcome to Scribble!</h1>
       <div className="mt-4">
         <p className="mt-4">A tiny web app for creating and managing your
