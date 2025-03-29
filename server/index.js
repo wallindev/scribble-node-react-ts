@@ -58,10 +58,10 @@ app.use(express.static(buildPath))
 const authenticate = async (req, res, next) => {
   try {
     const decodedTokenData = await validateTokenDataFromHeader(req.headers)
-    const { userId, iat, exp } = decodedTokenData
+    const { userId, email, iat, exp } = decodedTokenData
     const issued = localDateStr(new Date(iat * 1000))
     const expires = localDateStr(new Date(exp * 1000))
-    req.user = { userId, issued, expires }
+    req.user = { userId, email, issued, expires }
     next()
   } catch (error) {
     // console.log('error.name:', error.name)
@@ -356,7 +356,7 @@ api.get('/verify', async (req, res) => {
   const userId = db.data.users[usersIndex].id
   const email = db.data.users[usersIndex].email
   const authToken = await generateToken({ userId, email })
-  const { _, iat, exp } = readToken(authToken)
+  const { _userId, _email, iat, exp } = readToken(authToken)
   const issued = iat * 1000
   const expires = exp * 1000
   res.status(HttpStatusCode.Ok).json({ userId, email, authToken, issued, expires })
@@ -384,7 +384,7 @@ api.post('/login', async (req, res) => {
 
   const userId = user.id
   const authToken = await generateToken({ userId, email })
-  const { _, iat, exp } = readToken(authToken)
+  const { _userId, _email, iat, exp } = readToken(authToken)
   const issued = iat * 1000
   const expires = exp * 1000
   res.status(HttpStatusCode.Ok).json({ userId, email, authToken, issued, expires })
