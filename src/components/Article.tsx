@@ -7,7 +7,7 @@ import Layout from './layout/Layout'
 import CustomButton from './shared/CustomButton'
 import { Mode } from '../types/general.types'
 import type { IGlobal, Mode as TMode, TArticle } from '../types/general.types'
-import { consoleError, getUserId, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
+import { consoleError, getUserId, localDateStr, replaceNewlinesWithBr, scrollSmoothlyToTop, selectElementText, setElementText } from '../utils/functions'
 import { defaultArticle, defaultContentText, defaultTitleText, defaultRequestConfig } from '../utils/defaults'
 
 // import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect'
@@ -128,6 +128,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessa
       }
     }
     if (!error) {
+      scrollSmoothlyToTop()
       setFlashMessage({
         message: 'Article updated successfully',
         type: 'success',
