@@ -150,7 +150,7 @@ export const validateTokenDataFromHeader = async (headers) => {
   if (!token) return null
   try {
     const tokenData = await validateToken(token)
-    // console.log('validateTokenDataFromHeader, tokenData:', tokenData)
+    console.log('validateTokenDataFromHeader, tokenData:', tokenData)
     return tokenData
   } catch (error) {
     throw error
