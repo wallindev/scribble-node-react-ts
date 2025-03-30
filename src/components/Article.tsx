@@ -1,20 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import axios, { HttpStatusCode, isAxiosError } from 'axios'
-import type { FocusEvent, FC, JSX, KeyboardEvent, KeyboardEventHandler } from 'react'
+import type { FocusEvent, FC, JSX, KeyboardEvent, KeyboardEventHandler, RefObject } from 'react'
 import type { AxiosError, AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import CustomButton from './shared/CustomButton'
-import { Mode } from '../types/general.types'
-import type { IGlobal, Mode as TMode, TArticle } from '../types/general.types'
-import { consoleError, getUserId, localDateStr, replaceNewlinesWithBr, scrollSmoothlyToTop, selectElementText, setElementText } from '../utils/functions'
+import DelayedLink from './shared/DelayedLink'
+import { LinkType, Mode } from '../types/general.types'
+import { consoleError, fadeOutAndNavigate, getUserId, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
 import { defaultArticle, defaultContentText, defaultTitleText, defaultRequestConfig } from '../utils/defaults'
-
-// import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect'
+import { STANDARD_DELAY } from '../utils/constants'
+import type { IGlobal, Mode as TMode, TArticle } from '../types/general.types'
 
 const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
   const params = useParams<{ id: string }>()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams, _setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const [article, setArticle] = useState<TArticle>(defaultArticle)
   const [articleMode, setArticleMode] = useState<TMode>(Mode.Edit)
@@ -128,16 +128,13 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessa
       }
     }
     if (!error) {
-      scrollSmoothlyToTop()
       setFlashMessage({
         message: 'Article updated successfully',
         type: 'success',
         visible: true,
       })
-      setTimeout(() => {
-        // Remove querystring, so '/articles/:id?edit' becomes '/articles/:id'
-        setSearchParams('')
-      }, 3000)
+      // Initiate fade-out effect on wrapper div
+      fadeOutAndNavigate(wrapperRef as RefObject<HTMLDivElement>, '/profile', navigate, STANDARD_DELAY, flashMessage, setFlashMessage)
     }
   }
 
@@ -180,7 +177,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessa
       })
       setTimeout(() => {
         navigate(`/articles/${newArticleId}`)
-      }, 3000)
+      }, STANDARD_DELAY)
       // console.log(articleMode)
       // TODO: is this needed?
       // Change mode to Show
@@ -205,7 +202,6 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessa
 
   return (
     <Layout loading={loading} theme={theme} setTheme={setTheme} flashMessage={flashMessage} setFlashMessage={setFlashMessage} wrapperRef={wrapperRef}>
-      {/* article.title && article.content ? <> */}
       <h3 className="text-2xl font-bold mb-4">{articleMode === Mode.Edit ? 'Edit ' : articleMode === Mode.New ? 'New ' : ''}Article</h3>
       <div
         ref={divTitleRef}
@@ -226,18 +222,13 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessa
         <div>Created: {localDateStr(article.created)}</div>
         <div>Modified: {localDateStr(article.modified)}</div>
       </div>
-      {articleMode === Mode.Show ? (
-        <>
-          <CustomButton onClick={() => navigate('/articles')} className="mr-4">&laquo; All Articles</CustomButton>
-          <CustomButton onClick={() => navigate('?edit')}>Edit</CustomButton>
-        </>
-      ) : (
-        <>
-          <CustomButton type="button" onClick={() => articleMode === Mode.Edit ? navigate(`/articles/${params.id}`) : navigate('/articles')}>&laquo; Cancel</CustomButton>
-          <CustomButton type="submit" onClick={saveArticle} className="ml-4">{articleMode === Mode.Edit ? 'Update' : 'Save'}</CustomButton>
-        </>
-      )}
-      {/* </> : <CustomButton onClick={() => navigate('/articles')} className="mr-4">&laquo; All Articles</CustomButton> */}
+      {articleMode === Mode.Show ? <>
+        <DelayedLink wrapperRef={wrapperRef} linkType={LinkType.Button} to="/articles">&laquo; All Articles</DelayedLink>
+        <DelayedLink wrapperRef={wrapperRef} linkType={LinkType.Button} className="ml-4" to="?edit">Edit Article</DelayedLink>
+      </> : <>
+        <DelayedLink wrapperRef={wrapperRef} linkType={LinkType.Button} to={articleMode === Mode.Edit ? `/articles/${params.id}` : '/articles'}>&laquo; Cancel</DelayedLink>
+        <CustomButton className="ml-4" type="button" onClick={saveArticle} size="large">{articleMode === Mode.Edit ? 'Update' : 'Save'}</CustomButton>
+        </>}
     </Layout>
   )
 }
