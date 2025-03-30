@@ -10,7 +10,8 @@ import User from './components/User'
 import Articles from './components/Articles'
 import Article from './components/Article'
 import ProtectedRoute from './components/ProtectedRoute'
-import { Theme, TFlashMessage } from './types/general.types'
+import { Theme } from './types/general.types'
+import type { TFlashMessage } from './types/general.types'
 import { defaultFlashMessage } from './utils/defaults'
 import './utils/config'
 
@@ -46,11 +47,9 @@ const App: FC = (): JSX.Element => {
         <Route element={<ProtectedRoute />}>
           <Route path="/home" element={<Home {...globalProps} />} />
           <Route path="/profile" element={<User {...globalProps} />} />
-          <Route path="/profile?edit" element={<User {...globalProps} />} />
           <Route path="/articles" element={<Articles {...globalProps} />} />
           <Route path="/articles/new" element={<Article {...globalProps} />} />
           <Route path="/articles/:id" element={<Article {...globalProps} />} />
-          <Route path="/articles/:id?edit" element={<Article {...globalProps} />} />
         </Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
