@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios, { HttpStatusCode, isAxiosError } from 'axios'
-import type { FC, JSX } from 'react'
+import type { FC, JSX, RefObject } from 'react'
 import type { AxiosError, AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import CustomButton from './shared/CustomButton'
-import TextLink from './shared/TextLink'
-import { TokenType } from '../types/general.types'
-import type { TArticle, IGlobal } from '../types/general.types'
+import DelayedLink from './shared/DelayedLink'
+import { LinkType, TokenType } from '../types/general.types'
+import { STANDARD_DELAY } from '../utils/constants'
 import { consoleError, handleHttpError } from '../utils/functions'
-import { defaultFlashMessage, defaultRequestConfig } from '../utils/defaults'
+import { defaultRequestConfig } from '../utils/defaults'
+import type { TArticle, IGlobal } from '../types/general.types'
 
 const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
   const navigate = useNavigate()
@@ -26,7 +27,7 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMess
           setArticles(response.data)
         }
       } catch (error) {
-        httpError = handleHttpError(error, setFlashMessage, defaultFlashMessage, TokenType.Auth, navigate)
+        httpError = handleHttpError(error, wrapperRef as RefObject<HTMLDivElement>, flashMessage, setFlashMessage, TokenType.Auth, navigate)
       } finally {
         // To mock slow network
         // setTimeout(() => {
@@ -76,25 +77,25 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMess
         })
         // To mock slow network
         setTimeout(() => {
-          setFlashMessage(defaultFlashMessage)
+          setFlashMessage({ ...flashMessage, visible: false })
           // setLoading!(false)
-        }, 3000)
+        }, STANDARD_DELAY)
       }
     }
   }
 
   return (
     <Layout loading={loading} theme={theme} setTheme={setTheme} flashMessage={flashMessage} setFlashMessage={setFlashMessage} wrapperRef={wrapperRef}>
-      <h1 className="text-2xl font-bold mb-4">Articles</h1>
-      <CustomButton className="my-2" onClick={() => navigate('/articles/new')}>New Article &raquo;</CustomButton>
+      <h3 className="text-2xl font-bold mb-4">Articles</h3>
+      <DelayedLink wrapperRef={wrapperRef} linkType={LinkType.Button} className="my-2" to="/articles/new">New Article &raquo;</DelayedLink>
       <div className="m-2">
         {articles.map((article) => (
           <div className="my-2 flex flex-row justify-between items-center border-0 border-b-1" key={article.id}>
             <div className="my-1" key={`t${article.id}`}>
-              <TextLink className="text-xl" to={`/articles/${article.id}`} style={{ fontSize: '20px' }}>{article.title}</TextLink>
+              <DelayedLink wrapperRef={wrapperRef} linkType={LinkType.Text} className="text-xl" to={`/articles/${article.id}`}>{article.title}</DelayedLink>
             </div>
             <div className="my-1" key={`d${article.id}`}>
-              <CustomButton onClick={() => deleteArticle(article)}>Delete</CustomButton>
+              <CustomButton className="ml-4" onClick={() => deleteArticle(article)} size="large">Delete Article</CustomButton>
             </div>
           </div>
         ))}
