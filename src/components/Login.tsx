@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios, { HttpStatusCode } from 'axios'
-import type { ChangeEvent, FC, JSX, KeyboardEvent, KeyboardEventHandler } from 'react'
+import type { ChangeEvent, FC, JSX, KeyboardEvent, KeyboardEventHandler, RefObject } from 'react'
 import type { AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import TextInput from './shared/TextInput'
 import DelayedLink from './shared/DelayedLink'
+import CustomButton from './shared/CustomButton'
 import { LinkType, TokenType } from '../types/general.types'
+import { fadeOutAndNavigate, handleHttpError, login } from '../utils/functions'
+import { STANDARD_DELAY } from '../utils/constants'
 import type { IGlobal } from '../types/general.types'
-import { handleHttpError, login, scrollSmoothlyToTop } from '../utils/functions'
-import { defaultFlashMessage } from '../utils/defaults'
-import { FADE_IN_TIME, FADE_OUT_TIME } from '../utils/constants'
 
 const Login: FC<IGlobal> = ({ loading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
   const navigate = useNavigate()
@@ -30,10 +30,9 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme, flashMessage, setFlashMe
         const { userId, email, authToken, issued, expires } = response.data
         if (!userId || !email || !authToken || !issued || !expires) throw new Error("Missing Response data content")
         tokenData = JSON.stringify({ userId, email, authToken, issued, expires })
-        login(tokenData)
       }
     } catch (error) {
-      httpError = handleHttpError(error, setFlashMessage, defaultFlashMessage, TokenType.Verify, navigate)
+      httpError = handleHttpError(error, wrapperRef as RefObject<HTMLDivElement>, flashMessage, setFlashMessage, TokenType.Auth, navigate)
       // if (isAxiosError(error))  {
       //   httpError = error as AxiosError
       //   consoleError(httpError)
@@ -53,22 +52,16 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme, flashMessage, setFlashMe
       // }
     }
     if (!httpError && tokenData) {
-      scrollSmoothlyToTop()
       setFlashMessage({
         message: 'Login successful! Redirecting...',
         type: 'success',
         visible: true,
       })
       // Initiate fade-out effect on wrapper div
+      fadeOutAndNavigate(wrapperRef as RefObject<HTMLDivElement>, '/home', navigate, STANDARD_DELAY, flashMessage, setFlashMessage)
       setTimeout(() => {
-        const divWrapper = wrapperRef.current as HTMLDivElement
-        divWrapper.classList.replace(`duration-${FADE_IN_TIME}`, `duration-${FADE_OUT_TIME}`)
-        divWrapper.classList.replace('opacity-100', 'opacity-0')
-      }, 3000 - FADE_OUT_TIME)
-      setTimeout(() => {
-        navigate('/home')
-        setFlashMessage(defaultFlashMessage)
-      }, 3000)
+        login(tokenData)
+      }, STANDARD_DELAY - 500)
     }
   }
 
@@ -106,7 +99,7 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme, flashMessage, setFlashMe
         />
         <div className="flex flex-row sm:items-start mt-4">
           <DelayedLink wrapperRef={wrapperRef} linkType={LinkType.Button} className="max-sm:flex-1/2 mr-0.5 sm:mr-1" to="/">&laquo; Cancel</DelayedLink>
-          <DelayedLink wrapperRef={wrapperRef} linkType={LinkType.Button} className="max-sm:flex-1/2 ml-0.5 sm:ml-1" to="/home" type="button" onClick={handleLogin}>Login</DelayedLink>
+          <CustomButton className="max-sm:flex-1/2 ml-0.5 sm:ml-1" onClick={handleLogin} size="large">Login</CustomButton>
         </div>
       </div>
     </Layout>
