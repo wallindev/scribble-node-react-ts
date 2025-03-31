@@ -1,15 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios, { HttpStatusCode } from 'axios'
-import type { ChangeEvent, FC, JSX, KeyboardEvent, KeyboardEventHandler } from 'react'
+import type { ChangeEvent, FC, JSX, KeyboardEvent, KeyboardEventHandler, RefObject } from 'react'
 import type { AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import TextInput from './shared/TextInput'
 import CustomButton from './shared/CustomButton'
 import { TokenType } from '../types/general.types'
+import { handleHttpError } from '../utils/functions'
 import type { IGlobal } from '../types/general.types'
-import { handleHttpError, scrollSmoothlyToTop } from '../utils/functions'
-import { defaultFlashMessage } from '../utils/defaults'
 
 const Register: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
   const navigate = useNavigate()
@@ -23,7 +22,6 @@ const Register: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMess
     let httpError, userId, email
     try {
       setLoading!(true)
-      scrollSmoothlyToTop()
       setFlashMessage({
         message: 'Sending verification email...',
         type: 'success',
@@ -35,7 +33,7 @@ const Register: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMess
         email = response.data.email
       }
     } catch (error) {
-      httpError = handleHttpError(error, setFlashMessage, defaultFlashMessage, TokenType.Verify, navigate)
+      httpError = handleHttpError(error, wrapperRef as RefObject<HTMLDivElement>, flashMessage, setFlashMessage, TokenType.Verify, navigate)
       // if (isAxiosError(e)) {
       //   error = e as AxiosError
       //   consoleError(error)
@@ -56,7 +54,7 @@ const Register: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMess
       setLoading!(false)
     }
     if (!httpError && userId && email) {
-      setFlashMessage(defaultFlashMessage)
+      setFlashMessage({ ...flashMessage, visible: false })
       setTimeout(() => {
         setFlashMessage({
           message: 'Registration successful! Please check your inbox for an email verification link.',
