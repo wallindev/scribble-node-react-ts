@@ -1,14 +1,13 @@
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios, { HttpStatusCode, isAxiosError } from 'axios'
-import type { FC, JSX, MouseEvent } from 'react'
+import type { FC, JSX, MouseEvent, RefObject } from 'react'
 import type { AxiosError, AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import TextLink from './shared/TextLink'
 import { TokenType } from '../types/general.types'
+import { consoleError, getUserEmail, getUserId, handleHttpError, login } from '../utils/functions'
 import type { IGlobal } from '../types/general.types'
-import { consoleError, getUserEmail, getUserId, handleHttpError, login, scrollSmoothlyToTop } from '../utils/functions'
-import { defaultFlashMessage } from '../utils/defaults'
 
 const Verify: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
   const navigate = useNavigate()
@@ -20,7 +19,6 @@ const Verify: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessag
         let httpError, tokenData
         try {
           setLoading!(true)
-          scrollSmoothlyToTop()
           setFlashMessage({
             message: 'Verifying email address...',
             type: 'success',
@@ -33,13 +31,13 @@ const Verify: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessag
             tokenData = JSON.stringify({ userId, email, authToken, issued, expires })
           }
         } catch (error) {
-          httpError = handleHttpError(error, setFlashMessage, defaultFlashMessage, TokenType.Verify, navigate)
+          httpError = handleHttpError(error, wrapperRef as RefObject<HTMLDivElement>, flashMessage, setFlashMessage, TokenType.Verify, navigate)
         } finally {
           setLoading!(false)
         }
         if (!httpError && tokenData) {
           setTimeout(() => {
-            setFlashMessage(defaultFlashMessage)
+            setFlashMessage({ ...flashMessage, visible: false })
           }, 2900)
           setTimeout(() => {
             setFlashMessage({
@@ -51,7 +49,7 @@ const Verify: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessag
           setTimeout(() => {
             login(tokenData)
             navigate('/home')
-            setFlashMessage(defaultFlashMessage)
+            setFlashMessage({ ...flashMessage, visible: false })
           }, 6000)
         }
       })()
@@ -63,8 +61,7 @@ const Verify: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessag
     let httpError, userId, email
     try {
       setLoading!(true)
-      scrollSmoothlyToTop()
-      setFlashMessage(defaultFlashMessage)
+      setFlashMessage({ ...flashMessage, visible: false })
       setTimeout(() => {
         setFlashMessage({
           message: 'Resending verification email...',
@@ -78,7 +75,7 @@ const Verify: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessag
         email = response.data.email
       }
     } catch (error) {
-      // httpError = handleHttpError(error, setFlashMessage, defaultFlashMessage, TokenType.Verify, navigate)
+      // httpError = handleHttpError(error, wrapperRef as RefObject<HTMLDivElement>, flashMessage, setFlashMessage, TokenType.Verify, navigate)
       if (isAxiosError(error)) {
         httpError = error as AxiosError
         consoleError(httpError)
@@ -99,7 +96,7 @@ const Verify: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessag
       setLoading!(false)
     }
     if (!httpError && userId && email) {
-      setFlashMessage(defaultFlashMessage)
+      setFlashMessage({ ...flashMessage, visible: false })
       setTimeout(() => {
         setFlashMessage({
           message: 'Email sent successfully! Please check your inbox again for a new email verification link.',
@@ -113,9 +110,7 @@ const Verify: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessag
   return (
     <Layout loading={loading} theme={theme} setTheme={setTheme} flashMessage={flashMessage} setFlashMessage={setFlashMessage} wrapperRef={wrapperRef}>
       <h3 className="text-2xl font-bold mb-4">Email Verification</h3>
-      <div>
-        <p className="mt-4"><TextLink to={location.href} onClick={resendVerificationLink} className="ml-1">Re-send verification link</TextLink></p>
-      </div>
+      <div className="mt-4"><TextLink to={location.href} onClick={resendVerificationLink} className="ml-1">Re-send verification link</TextLink></div>
     </Layout>
   )
 }
