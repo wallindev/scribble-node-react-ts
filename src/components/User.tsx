@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMatch, useNavigate, useSearchParams } from 'react-router-dom'
 import axios, { HttpStatusCode, isAxiosError } from 'axios'
-import type { ChangeEvent, FocusEvent, KeyboardEvent, FC, JSX, KeyboardEventHandler } from 'react'
+import type { ChangeEvent, FocusEvent, KeyboardEvent, FC, JSX, KeyboardEventHandler, RefObject } from 'react'
 import type { AxiosError, AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import TextInput from './shared/TextInput'
 import CustomButton from './shared/CustomButton'
-import { Mode } from '../types/general.types'
-import type { IGlobal, Mode as TMode, TUser } from '../types/general.types'
-import { consoleError, getAuthToken, getUserId, localDateStr, selectElementText } from '../utils/functions'
+import { LinkType, Mode } from '../types/general.types'
+import { consoleError, fadeOutAndNavigate, getUserId, localDateStr, selectElementText } from '../utils/functions'
 import { defaultRequestConfig, defaultUser } from '../utils/defaults'
+import { STANDARD_DELAY } from '../utils/constants'
+import type { IGlobal, Mode as TMode, TUser } from '../types/general.types'
+import DelayedLink from './shared/DelayedLink'
 
 const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams, _setSearchParams] = useSearchParams()
   const matchProfile = useMatch('/profile')
   const navigate = useNavigate()
   const [user, setUser] = useState<TUser>(defaultUser)
@@ -30,8 +32,6 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage,
 
   // Fetch user id from local storage
   useEffect(() => {
-    const token = getAuthToken()
-    console.log(token)
     // console.log('useEffect with empty dep')
     if (!user.id) setUser({ ...user, id: getUserId() })
   }, [])
@@ -133,10 +133,8 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage,
         type: 'success',
         visible: true,
       })
-      setTimeout(() => {
-        // Remove querystring, so '/profile?edit' becomes '/profile'
-        setSearchParams('')
-      }, 3000)
+      // Initiate fade-out effect on wrapper div
+      fadeOutAndNavigate(wrapperRef as RefObject<HTMLDivElement>, '/profile', navigate, STANDARD_DELAY, flashMessage, setFlashMessage)
     }
   }
 
@@ -160,7 +158,7 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage,
             <div className="text-xl py-2 mb-2">{user.email}</div>
           </div>
           <div className="mt-4">
-            <CustomButton onClick={() => navigate('?edit')}>Edit Profile</CustomButton>
+            <DelayedLink wrapperRef={wrapperRef} linkType={LinkType.Button} to="?edit">Edit Profile</DelayedLink>
           </div>
         </> : <>
           <label htmlFor="firstName" className="p-1">First Name</label>
@@ -219,8 +217,9 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage,
             />
           </>}
           <div className="flex flex-row sm:items-start mt-4">
-            <CustomButton className="max-sm:flex-1/2 mr-0.5 sm:mr-1" type="button" onClick={() => userMode === Mode.Edit ? navigate('/profile') : navigate('/')}>&laquo; Cancel</CustomButton>
-            <CustomButton className="max-sm:flex-1/2 ml-0.5 sm:ml-1" type="button" onClick={saveUser}>{userMode === Mode.Edit ? 'Update' : 'Register'}</CustomButton>
+            <DelayedLink wrapperRef={wrapperRef} linkType={LinkType.Button} className="max-sm:flex-1/2 mr-0.5 sm:mr-1" to={userMode === Mode.Edit ? '/profile' : '/'}>&laquo; Cancel</DelayedLink>
+            {/* <CustomButton className="max-sm:flex-1/2 mr-0.5 sm:mr-1" type="button" onClick={() => userMode === Mode.Edit ? navigate('/profile') : navigate('/')}>&laquo; Cancel</CustomButton> */}
+            <CustomButton className="max-sm:flex-1/2 ml-0.5 sm:ml-1" type="button" onClick={saveUser} size="large">{userMode === Mode.Edit ? 'Update' : 'Register'}</CustomButton>
           </div>
         </>}
       </div>
