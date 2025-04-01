@@ -2,34 +2,45 @@ import { useEffect, useRef } from 'react'
 import type { FC, JSX } from 'react'
 import CustomButton from './CustomButton'
 import type { IFlashMessage } from '../../types/general.types'
+import { scrollSmoothlyToTop } from '../../utils/functions'
+import { defaultColors } from '../../utils/defaults'
 
-const FlashMessage: FC<IFlashMessage> = ({ message, type, onDismiss }): JSX.Element => {
-  const divRef = useRef<HTMLDivElement>(null)
+const FlashMessage: FC<IFlashMessage> = ({ flashMessage, setFlashMessage }): JSX.Element => {
+  const messageWrapperRef = useRef<HTMLDivElement>(null)
+  // TODO: Use to hide text and button from tab cycle/focus with keyboard?
+  // const messageRef = useRef<HTMLDivElement>(null)
+  const { message, type, visible } = flashMessage
 
   // Fade-in-fade-out effect on route change (together with CSS transition)
   useEffect(() => {
-    // setIsVisible(false)
-    const opacityTimer = setTimeout(() => {
-      // setIsVisible(true)
-      (divRef.current as HTMLDivElement)?.classList?.replace('opacity-0', 'opacity-100')
-    }, 50)
+    const divMessageWrapper = messageWrapperRef.current as HTMLDivElement
+    // const divMessage = messageRef.current as HTMLDivElement
+    if (visible) {
+      // Scroll to top every time a message is displayed
+      scrollSmoothlyToTop()
+      // console.log('show flash message')
+      // divMessage.classList.replace('hidden', 'flex')
+      divMessageWrapper.classList.replace('opacity-0', 'opacity-100')
+      divMessageWrapper.classList.replace('h-0', 'h-8')
+      divMessageWrapper.classList.replace('mb-0', 'mb-2')
+    } else {
+      // divMessage.classList.replace('flex', 'hidden')
+      divMessageWrapper.classList.replace('opacity-100', 'opacity-0')
+      divMessageWrapper.classList.replace('h-8', 'h-0')
+      divMessageWrapper.classList.replace('mb-2', 'mb-0')
+    }
 
-    return () => clearTimeout(opacityTimer)
-  }, [])
-
-  const colors: { [key: string]: string } = {
-    success: 'bg-green-700',
-    info: 'bg-blue-700',
-    warning: 'bg-yellow-700',
-    error: 'bg-red-700'
-  }
+    // ComponentWillUnMount
+    return () => {
+      // Garbage cleanup
+      // clearTimeout(showTimer)
+    }
+  }, [flashMessage])
 
   return (
-    <div ref={divRef} className="h-8 mb-2 transition-opacity delay-0 duration-1000 opacity-0">
-      <div className={`flex p-1 justify-between items-center rounded-sm ${colors[type]}`}>
-        <div className="text-gray-100 bg-transparent text-sm" dangerouslySetInnerHTML={{ __html: message }} />
-        <CustomButton onClick={onDismiss} size="small">×</CustomButton>
-      </div>
+    <div ref={messageWrapperRef} className={`flex h-0 mb-0 p-1 justify-between items-center rounded-sm transition-all delay-0 duration-500 opacity-0 ${defaultColors[type]}`}>
+      <div className="text-gray-100 bg-transparent text-sm" dangerouslySetInnerHTML={{ __html: message }} />
+      <CustomButton onClick={() => setFlashMessage({ ...flashMessage, visible: false })} size="small">×</CustomButton>
     </div>
   )
 }
