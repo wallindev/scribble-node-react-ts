@@ -5,6 +5,7 @@ import { To } from 'react-router-dom'
  * Enums
  *
  */
+
 export enum Mode {
   Show,
   Edit,
@@ -36,10 +37,35 @@ export enum TokenType {
   Verify
 }
 
+export enum MessageType {
+  Success = 'success',
+  Info = 'info',
+  Warning = 'warning',
+  Error = 'error'
+}
+
+export enum Color {
+  Green = 'bg-green-700',
+  Blue = 'bg-blue-700',
+  Yellow = 'bg-yellow-700',
+  Red = 'bg-red-700'
+}
+
 /*
  * Types
  *
  */
+
+export type TColor = {
+  [key: string]: string
+}
+// export type TColor = {
+//   success: string
+//   info: string
+//   warning: string
+//   error: string
+// }
+
 export type TArticle = {
   id?: number | null
   title: string
@@ -63,7 +89,7 @@ export type TUser = {
 
 export type TFlashMessage = {
   message: string
-  type: 'success' | 'info' | 'warning' | 'error'
+  type: string
   visible: boolean
 }
 
@@ -74,14 +100,15 @@ export type TFlashMessage = {
 
 export interface IMainNav {
   wrapperRef: RefObject<HTMLDivElement | null>
+  setFlashMessage: Dispatch<SetStateAction<TFlashMessage>>
+  flashMessage: TFlashMessage
   subNavOpen?: boolean
   setSubNavOpen?: Dispatch<SetStateAction<boolean>>
 }
 
 export interface IFlashMessage {
-  message: string
-  type: 'success' | 'info' | 'warning' | 'error'
-  onDismiss: MouseEventHandler<HTMLButtonElement> // () => void
+  flashMessage: TFlashMessage
+  setFlashMessage: Dispatch<SetStateAction<TFlashMessage>>
 }
 
 export interface IFooter {
@@ -119,7 +146,7 @@ export interface IDelayedLink {
   wrapperRef: RefObject<HTMLDivElement | null>
   linkType?: LinkType
   delay?: number
-  className?: string | (({ isActive }: { isActive: any }) => string)
+  className?: string
   buttonType?: 'button' | 'submit' | 'reset'
   onClick?: MouseEventHandler<HTMLButtonElement>
   // onClick?: () => void
@@ -131,7 +158,7 @@ export interface IDelayedLink {
 }
 
 export interface ITextLink {
-  className? : string
+  className?: string
   to: To
   children?: ReactNode
   style?: CSSProperties
