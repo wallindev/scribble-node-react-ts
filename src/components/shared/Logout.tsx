@@ -1,18 +1,29 @@
+import type { FC, JSX, MouseEvent, RefObject } from 'react'
+import { useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
-import type { FC, JSX, MouseEvent } from 'react'
-import DelayedLink from './DelayedLink'
-import { logout } from '../../utils/functions'
+import CustomButton from './CustomButton'
+import { fadeOutAndNavigate, logout } from '../../utils/functions'
+import { FADE_OUT_TIME, STANDARD_DELAY } from '../../utils/constants'
 import type { ILogout } from '../../types/form.types'
-import { LinkType } from '../../types/general.types'
 
-const Logout: FC<ILogout> = ({  wrapperRef, className, size = 'large', ...props }): JSX.Element => {
+const Logout: FC<ILogout> = ({  wrapperRef, flashMessage, setFlashMessage, className, size = 'large', ...props }): JSX.Element => {
+  const navigate = useNavigate()
   const handleLogout = (e: MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault()
-    logout()
+    setFlashMessage({
+      message: 'Logging out...',
+      type: 'success',
+      visible: true,
+    })
+    setTimeout(() => {
+      logout()
+    }, STANDARD_DELAY)
+    // Initiate fade-out effect on wrapper div
+    fadeOutAndNavigate(wrapperRef as RefObject<HTMLDivElement>, '/', navigate, STANDARD_DELAY, flashMessage, setFlashMessage)
   }
 
   return (
-    <DelayedLink buttonType="button" wrapperRef={wrapperRef} linkType={LinkType.Button} className={classNames('outline-0', className)} to="/" onClick={handleLogout} size={size} {...props}>Logout</DelayedLink>
+    <CustomButton className={classNames('outline-0', className)} onClick={handleLogout} size={size} {...props}>Logout</CustomButton>
   )
 }
 
