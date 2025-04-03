@@ -64,15 +64,23 @@ const authenticate = async (req, res, next) => {
     req.user = { userId, email, issued, expires }
     next()
   } catch (error) {
+    console.log(`This is a ${error.name} error`)
+    console.log('This error has these properties:', Object.keys(error))
     // console.log('error.name:', error.name)
     // console.log('error.message:', error.message)
     // console.log('error.stack:', error.stack)
     if (error.name === 'TokenExpiredError') {
-      console.log('Token has expired:', error.message)
+      console.log('Error name:', error.name)
+      console.log('Error message:', error.message)
+      console.log('Token expired at:', error.expiredAt)
+      console.log('Token expired at (local time):', localDateStr(error.expiredAt))
     } else if (error.name === 'JsonWebTokenError') {
-      console.error('Token verification failed:', error.message)
+      console.log('Error message:', error.message)
+      // console.error('Token verification failed:', error.message)
     } else {
-      console.error('Unexpected JWT Error:', error.message)
+      console.log('This is an unknown/unexpected JsonWebToken error')
+      console.log('Error message:', error.message)
+      // console.error('Unexpected JWT Error:', error.message)
     }
     return res.status(HttpStatusCode.Unauthorized).json({ error })
   }
@@ -94,7 +102,6 @@ api.use(`/users/:id${onlyDigits}`, authenticate, (req, res, next) => {
 
 // User id on protected resources
 api.use(['/articles', '/users'], authenticate, (req, res, next) => {
-  // console.log('\nreq.user?.userId:', req.user?.userId)
   if (!req.user?.userId)
     return res.status(HttpStatusCode.Unauthorized).json({ message: 'userId missing' })
   next()
@@ -259,13 +266,13 @@ api.post('/register', async (req, res) => {
     hostUrl = IS_LIVE ? liveHostUrl : localHostUrl
 
   const { reSend } = req.query
-  const { userId, email } = req.body
   if (reSend !== undefined) {
+    const { userId, email } = req.body
     if (!userId || !email)
       return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid user data' })
 
     try {
-      const verifyToken = await generateToken({ userId, email }, 'verify')
+      const verifyToken = await generateToken({ userId, email }, 'verify', { expiresIn: '10m' })
       await sendVerifyEmail(email, verifyToken, hostUrl)
       res.status(HttpStatusCode.Ok).json({ userId, email })
     } catch (error) {
@@ -276,6 +283,9 @@ api.post('/register', async (req, res) => {
     const { firstName, lastName, email, password, passwordConfirm } = req.body
     if (!firstName || !lastName || !email || !password || !passwordConfirm)
       return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid user data' })
+
+    const usersIndex = db.data.users.findIndex(user => user.email === email)
+    if (usersIndex !== -1) return res.status(HttpStatusCode.Conflict).json({ message: 'Email already exists' })
 
     if (password !== passwordConfirm) return res.status(HttpStatusCode.BadRequest).json({ message: 'Passwords not equal' })
 
@@ -302,7 +312,7 @@ api.post('/register', async (req, res) => {
 
     // Insert into db and return to client
     try {
-      const verifyToken = await generateToken({ userId: newId, email }, 'verify')
+      const verifyToken = await generateToken({ userId: newId, email }, 'verify', { expiresIn: '10m' })
       // console.log('verifyToken:', verifyToken)
       // console.log('hostUrl:', hostUrl)
       console.time('sendMail')
@@ -311,7 +321,7 @@ api.post('/register', async (req, res) => {
       await db.read()
       await db.update(({ users }) => users.push(newUser))
       const userId = newUser.id
-      res.status(HttpStatusCode.Created).json({ userId, email })
+      res.status(HttpStatusCode.Created).json({ userId })
     } catch (error) {
       console.error("Error creating user or generating verify token:\n", error)
       res.status(HttpStatusCode.InternalServerError).json({ message: 'Internal server error' })
@@ -355,11 +365,20 @@ api.get('/verify', async (req, res) => {
 
   const userId = db.data.users[usersIndex].id
   const email = db.data.users[usersIndex].email
-  const authToken = await generateToken({ userId, email })
-  const { _userId, _email, iat, exp } = readToken(authToken)
-  const issued = iat * 1000
-  const expires = exp * 1000
-  res.status(HttpStatusCode.Ok).json({ userId, email, authToken, issued, expires })
+  const authToken = await generateToken({ userId, email }, 'auth', { expiresIn: '10m' })
+  const tokenData = readToken(authToken)
+  console.log('token data:', tokenData)
+
+  if (!tokenData || !tokenData?.userId || !tokenData?.email || !tokenData?.iat || !tokenData?.exp)
+    res.status(HttpStatusCode.Unauthorized).json({ message: 'Invalid generated token data' })
+
+  res.status(HttpStatusCode.Ok).json({
+    userId: tokenData.userId,
+    email: tokenData.email,
+    issued: tokenData.iat * 1000,
+    expires: tokenData.exp * 1000,
+    authToken
+  })
 })
 
 // Log in user with email and password, and set/send auth token
@@ -383,11 +402,19 @@ api.post('/login', async (req, res) => {
   // })
 
   const userId = user.id
-  const authToken = await generateToken({ userId, email })
-  const { _userId, _email, iat, exp } = readToken(authToken)
-  const issued = iat * 1000
-  const expires = exp * 1000
-  res.status(HttpStatusCode.Ok).json({ userId, email, authToken, issued, expires })
+  const authToken = await generateToken({ userId, email }, 'auth', { expiresIn: '10m' })
+  const tokenData = readToken(authToken)
+
+  if (!tokenData || !tokenData?.userId || !tokenData?.email || !tokenData?.iat || !tokenData?.exp)
+    res.status(HttpStatusCode.Unauthorized).json({ message: 'Invalid generated token data' })
+
+  res.status(HttpStatusCode.Ok).json({
+    userId: tokenData.userId,
+    email: tokenData.email,
+    issued: tokenData.iat * 1000,
+    expires: tokenData.exp * 1000,
+    authToken
+  })
 })
 
 // Route only used to view auth token
