@@ -1,9 +1,10 @@
-// import { useState } from 'react'
 import /* axios,  */{ isAxiosError } from 'axios'
-import type { Dispatch, SetStateAction } from 'react'
-import type { AxiosError/* , AxiosRequestConfig */, AxiosResponse } from 'axios'
-import { TFlashMessage, TokenType } from '../types/general.types'
+import type { Dispatch, RefObject, SetStateAction } from 'react'
 import type { NavigateFunction } from 'react-router-dom'
+import type { AxiosError/* , AxiosRequestConfig */, AxiosResponse } from 'axios'
+import { TokenType } from '../types/general.types'
+import type { TFlashMessage } from '../types/general.types'
+import { FADE_OUT_TIME, STANDARD_DELAY } from './constants'
 
 // Example of JSDoc
 /**
@@ -17,6 +18,37 @@ import type { NavigateFunction } from 'react-router-dom'
  * Functions
  *
  */
+
+// Fade out page, and optionally navigate and remove flash message
+export const fadeOutAndNavigate = (wrapperRef: RefObject<HTMLDivElement>, navPath?: string, navigate?: NavigateFunction, navDelay?: number, flashMessage?: TFlashMessage, setFlashMessage?: Dispatch<SetStateAction<TFlashMessage>>): void => {
+  // Must not be at navPath location, because then navigate will not fire and the page will
+  // just fade to black. This only needs to be checked with other components than DelayedLink,
+  // because a DelayedLink will not be clickable if it's "active" (same as current path)
+  const curNavPath = `${location.pathname}${location.search}`
+  if (curNavPath !== navPath) {
+    setTimeout(() => {
+      // console.log('hide wrapper/page')
+      const divWrapper = wrapperRef.current as HTMLDivElement
+      divWrapper.classList.replace('opacity-100', 'opacity-0')
+    }, navDelay ? navDelay - FADE_OUT_TIME : 0)
+
+    // Navigate (with optional delay)?
+    if (navPath && navigate) {
+      setTimeout(() => {
+        // console.log(`navigate to '${navPath}'...`)
+        navigate(navPath)
+      }, navDelay || 0)
+    }
+  }
+
+  // Remove flash message?
+  if (flashMessage && setFlashMessage) {
+    setTimeout(() => {
+      // console.log('hide flash message')
+      setFlashMessage({ ...flashMessage, message: '', visible: false })
+    }, navDelay ? navDelay - FADE_OUT_TIME : 0)
+  }
+}
 
 export const scrollSmoothlyToTop = (): void => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
 
@@ -35,13 +67,6 @@ export const selectElementText = (element: HTMLDivElement | HTMLInputElement, te
 
 export const replaceNewlinesWithBr = (text: string): string => text.replace(/\r\n|\r|\n/g, '<br />')
 
-export const dismissFlashMessage = (
-  flashMessage: TFlashMessage,
-  setFlashMessage: Dispatch<SetStateAction<TFlashMessage>>,
-) => {
-  setFlashMessage({ ...flashMessage, visible: false })
-}
-
 export const login = (tokenData: string): void => setTokenData(tokenData)
 
 export const logout = (): void => removeTokenData()
@@ -57,9 +82,6 @@ export const getUserId = (): number | null => {
   if (!tokenData) return null
   const tokenDataJson = JSON.parse(tokenData)
   if (!Number.isInteger(Number(tokenDataJson.userId))) return null
-  // console.log('tokenData:', tokenData)
-  // console.log('tokenDataJson:', tokenDataJson)
-  // console.log('tokenDataJson.userId:', tokenDataJson.userId)
   return Number(tokenDataJson.userId)
 }
 
@@ -90,9 +112,6 @@ export const authTokenValid = (): boolean => {
   const tokenDataJson = JSON.parse(tokenData)
   const tokenTimestamp = tokenDataJson.expires
   if (!tokenTimestamp) return false
-  // console.log('tokenTimestamp:', tokenTimestamp)
-  // console.log('Date.now():', Date.now())
-  // console.log('Date.now() <= tokenTimestamp:', Date.now() <= tokenTimestamp)
   return Date.now() <= tokenTimestamp
 }
 
@@ -127,7 +146,7 @@ export const isAuthenticated = (): boolean => {
   .catch(error => {
     let httpError
     setAuth(false)
-    handleHttpError(httpError, error)
+    handleHttpError(httpError)
   }) */
 }
 
@@ -136,7 +155,7 @@ export const localDateStr = (dateStr?: string | number | Date | null): string =>
   return date.toLocaleString("sv-SE", { timeZone: "Europe/Stockholm" })
 }
 
-export const handleHttpError = (error: any, setFlashMessage?: Dispatch<SetStateAction<TFlashMessage>>, defaultFlashMessage?: any, tokenType?: TokenType, navigate?: NavigateFunction): AxiosError | any => {
+export const handleHttpError = (error: any, wrapperRef?: RefObject<HTMLDivElement>, flashMessage?: TFlashMessage, setFlashMessage?: Dispatch<SetStateAction<TFlashMessage>>, tokenType?: TokenType, navigate?: NavigateFunction): AxiosError | any => {
   let httpError
   if (isAxiosError(error)) {
     httpError = error as AxiosError
@@ -157,11 +176,12 @@ export const handleHttpError = (error: any, setFlashMessage?: Dispatch<SetStateA
             visible: true,
           })
           if (tokenType === TokenType.Auth) {
+            fadeOutAndNavigate(wrapperRef as RefObject<HTMLDivElement>, '/', navigate, STANDARD_DELAY, flashMessage, setFlashMessage)
             setTimeout(() => {
               logout()
-              setFlashMessage(defaultFlashMessage)
-              navigate!('/')
-            }, 3000)
+              if (flashMessage) setFlashMessage({ ...flashMessage, visible: false })
+              if (navigate) navigate('/')
+            }, STANDARD_DELAY)
           }
         }
       } else if (nestedError.name === 'JsonWebTokenError') {
@@ -221,7 +241,6 @@ export const handleHttpError = (error: any, setFlashMessage?: Dispatch<SetStateA
   }
   return httpError
 }
-
 
 // console.log with console.error styling
 export const consoleError = (errorObj: any): void => {
