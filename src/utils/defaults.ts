@@ -1,6 +1,10 @@
-import { TArticle, TFlashMessage, TUser } from '../types/general.types'
-import { getAuthToken, hasAuthToken } from './functions'
 import type { AxiosRequestConfig } from 'axios'
+import { Color, MessageType } from '../types/general.types'
+import type { TArticle, TColor, TFlashMessage, TUser } from '../types/general.types'
+import { getAuthToken, hasAuthToken } from './functions'
+
+export const defaultTitleText = '[Title Here]'
+export const defaultContentText = '[Content Here]'
 
 export const defaultRequestConfig: AxiosRequestConfig | any = hasAuthToken() ? {
   headers: {
@@ -8,7 +12,14 @@ export const defaultRequestConfig: AxiosRequestConfig | any = hasAuthToken() ? {
   }
 } : {}
 
-export let defaultArticle: TArticle = {
+export const defaultColors: TColor = {
+  success: Color.Green,
+  info: Color.Blue,
+  warning: Color.Yellow,
+  error: Color.Red
+}
+
+export const defaultArticle: TArticle = {
   id: null,
   title: '',
   content: '',
@@ -16,10 +27,8 @@ export let defaultArticle: TArticle = {
   modified: '',
   userId: 0
 }
-export const defaultTitleText = '[Title Here]'
-export const defaultContentText = '[Content Here]'
 
-export let defaultUser: TUser = {
+export const defaultUser: TUser = {
   id: null,
   firstName: '',
   lastName: '',
@@ -31,8 +40,8 @@ export let defaultUser: TUser = {
   modified: ''
 }
 
-export let defaultFlashMessage: TFlashMessage = {
+export const defaultFlashMessage: TFlashMessage = {
   message: '',
-  type: 'success',
+  type: MessageType.Success,
   visible: false
 }
