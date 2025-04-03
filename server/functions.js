@@ -26,11 +26,6 @@ export const sendVerifyEmail = async (toEmail, verifyToken, host) => {
 }
 
 export const sendEmail = async (to, subject, html) => {
-  // console.log('EMAIL_USER:', process.env.EMAIL_USER)
-  // console.log('EMAIL_PASS:', process.env.EMAIL_PASS)
-  // console.log('to:', to)
-  // console.log('subject:', subject)
-  // console.log('html:', html)
   const transporter = nodemailer.createTransport({
     host: 'smtp.mail.yahoo.com',
     port: 465,
@@ -43,17 +38,12 @@ export const sendEmail = async (to, subject, html) => {
     debug: false,
     logger: true,
   })
-
   const mailOptions = {
-    // from: 'Scribble-admin <admin@scribbleapp.com>',
     from: 'Mikael Wallin <mikael.wallin@yahoo.se>',
     to,
     subject,
     html,
   }
-  // console.log('mailOptions:', mailOptions)
-  // return
-
   await transporter.sendMail(mailOptions)
 }
 
@@ -111,9 +101,9 @@ export const signJwtToken = async (payload, secret, options = {}) => {
   }
 }
 
-export const verifyJwtToken = async (payload, secret) => {
+export const verifyJwtToken = async (token, secret) => {
   try {
-    return await verifyJwtAsync(payload, secret)
+    return await verifyJwtAsync(token, secret)
   } catch (err) {
     throw err
   }
@@ -121,17 +111,17 @@ export const verifyJwtToken = async (payload, secret) => {
 
 export const readToken = (token) => decodeJwtToken(token, IS_LIVE ? envConfigVars.SECRET_AUTH : envFileVars.SECRET_AUTH)
 
-export const generateToken = async (payload, type = 'auth', options = {}) => {
+export const generateToken = async (payload, type = 'auth', options = { expiresIn: '1h' }) => {
   let secretKey = ''
   if (type === 'verify') {
     secretKey = IS_LIVE ? envConfigVars.SECRET_VERIFY : envFileVars.SECRET_VERIFY
   } else {
     secretKey = IS_LIVE ? envConfigVars.SECRET_AUTH : envFileVars.SECRET_AUTH
   }
-  return await signJwtToken(payload, secretKey, { expiresIn: '1h' })
+  return await signJwtToken(payload, secretKey, options)
 }
 
-export const validateToken = async (payload, type = 'auth') => {
+export const validateToken = async (token, type = 'auth') => {
   let secretKey = ''
   if (type === 'verify') {
     secretKey = IS_LIVE ? envConfigVars.SECRET_VERIFY : envFileVars.SECRET_VERIFY
@@ -139,7 +129,7 @@ export const validateToken = async (payload, type = 'auth') => {
     secretKey = IS_LIVE ? envConfigVars.SECRET_AUTH : envFileVars.SECRET_AUTH
   }
 
-  return await verifyJwtToken(payload, secretKey)
+  return await verifyJwtToken(token, secretKey)
 }
 
 // Decode and read token data from auth header
@@ -150,7 +140,6 @@ export const validateTokenDataFromHeader = async (headers) => {
   if (!token) return null
   try {
     const tokenData = await validateToken(token)
-    console.log('validateTokenDataFromHeader, tokenData:', tokenData)
     return tokenData
   } catch (error) {
     throw error
@@ -171,18 +160,6 @@ export const readTokenDataFromHeader = (headers) => {
   } catch (error) {
     throw error
   }
-}
-
-export const authTokenValid = () => {
-  const tokenData = getTokenData()
-  if (!tokenData) return false
-  const tokenDataJson = JSON.parse(tokenData)
-  const tokenTimestamp = tokenDataJson.expires
-  if (!tokenTimestamp) return false
-  // console.log('tokenTimestamp:', tokenTimestamp)
-  // console.log('Date.now():', Date.now())
-  // console.log('Date.now() <= tokenTimestamp:', Date.now() <= tokenTimestamp)
-  return Date.now() <= tokenTimestamp
 }
 
 /*
