@@ -7,9 +7,9 @@ import Layout from './layout/Layout'
 import CustomButton from './shared/CustomButton'
 import DelayedLink from './shared/DelayedLink'
 import { LinkType, Mode } from '../types/general.types'
-import { consoleError, fadeOutAndNavigate, getUserId, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
-import { defaultArticle, defaultContentText, defaultTitleText, defaultRequestConfig } from '../utils/defaults'
+import { consoleError, fadeOutAndNavigate, getAuthHeader, getUserId, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
 import { STANDARD_DELAY } from '../utils/constants'
+import { defaultArticle, defaultContentText, defaultTitleText } from '../utils/defaults'
 import type { IGlobal, Mode as TMode, TArticle } from '../types/general.types'
 
 const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
@@ -44,7 +44,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessa
           setLoading!(true)
           let error
           try {
-            const response: AxiosResponse = await axios.get(`/articles/${params.id}`, defaultRequestConfig)
+            const response: AxiosResponse = await axios.get(`/articles/${params.id}`, getAuthHeader())
             if (response.status === HttpStatusCode.Ok && response.data) {
               setArticle(response.data)
             }
@@ -104,7 +104,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessa
   const updateArticle = async (artcl: Partial<TArticle>): Promise<void> => {
     let error
     try {
-      const response: AxiosResponse = await axios.patch(`/articles/${params.id}`, artcl, defaultRequestConfig)
+      const response: AxiosResponse = await axios.patch(`/articles/${params.id}`, artcl, getAuthHeader())
       if (response.status === HttpStatusCode.Ok && response.data) {
         setArticle(response.data)
       }
@@ -143,7 +143,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessa
     let error, newArticleId: number
     try {
       // console.log('params.id:', params.id)
-      const response: AxiosResponse = await axios.post('/articles', artcl, defaultRequestConfig)
+      const response: AxiosResponse = await axios.post('/articles', artcl, getAuthHeader())
       // console.log('response.data:', response.data)
       if (response.status === HttpStatusCode.Created && response.data) {
         setArticle(response.data)
