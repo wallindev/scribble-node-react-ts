@@ -7,9 +7,8 @@ import Layout from './layout/Layout'
 import CustomButton from './shared/CustomButton'
 import DelayedLink from './shared/DelayedLink'
 import { LinkType, TokenType } from '../types/general.types'
+import { consoleError, getAuthHeader, handleHttpError, hideFlashMessage } from '../utils/functions'
 import { STANDARD_DELAY } from '../utils/constants'
-import { consoleError, handleHttpError } from '../utils/functions'
-import { defaultRequestConfig } from '../utils/defaults'
 import type { TArticle, IGlobal } from '../types/general.types'
 
 const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
@@ -22,20 +21,14 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMess
       setLoading!(true)
       let httpError
       try {
-        const response: AxiosResponse = await axios.get('/articles', defaultRequestConfig)
+        const response: AxiosResponse = await axios.get('/articles', getAuthHeader())
         if (response.status === HttpStatusCode.Ok && response.data) {
           setArticles(response.data)
         }
       } catch (error) {
         httpError = handleHttpError(error, wrapperRef as RefObject<HTMLDivElement>, flashMessage, setFlashMessage, TokenType.Auth, navigate)
       } finally {
-        // To mock slow network
-        // setTimeout(() => {
-          setLoading!(false)
-        // }, 5000)
-      }
-      if (!httpError/*  && articles|response.data etc */) {
-        // If everything went well, do this
+        setLoading!(false)
       }
     })()
   }, [articles.length])
@@ -44,7 +37,7 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMess
     if (confirm(`Do you really want to delete article '${artcl.title}'`)) {
       let error
       try {
-        const response: AxiosResponse = await axios.delete(`${'/articles'}/${artcl.id}`, defaultRequestConfig)
+        const response: AxiosResponse = await axios.delete(`${'/articles'}/${artcl.id}`, getAuthHeader())
         if (response.status === HttpStatusCode.Ok && response.data) {
           setArticles(response.data)
         }
@@ -77,7 +70,7 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMess
         })
         // To mock slow network
         setTimeout(() => {
-          setFlashMessage({ ...flashMessage, visible: false })
+          hideFlashMessage(flashMessage, setFlashMessage)
           // setLoading!(false)
         }, STANDARD_DELAY)
       }
