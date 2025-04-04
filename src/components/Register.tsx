@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios, { HttpStatusCode } from 'axios'
+import axios, { HttpStatusCode, isAxiosError } from 'axios'
 import type { ChangeEvent, FC, JSX, KeyboardEvent, KeyboardEventHandler, RefObject } from 'react'
 import type { AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import TextInput from './shared/TextInput'
 import CustomButton from './shared/CustomButton'
-import { TokenType } from '../types/general.types'
-import { handleHttpError } from '../utils/functions'
+import { LinkType, TokenType } from '../types/general.types'
+import { handleHttpError, hideFlashMessage } from '../utils/functions'
 import type { IGlobal } from '../types/general.types'
+import DelayedLink from './shared/DelayedLink'
 
 const Register: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
   const navigate = useNavigate()
@@ -19,7 +20,7 @@ const Register: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMess
   const [passwordConfirm, setPasswordConfirm] = useState<string>('')
 
   const handleRegister = async () => {
-    let httpError, userId, email
+    let httpError, userId
     try {
       setLoading!(true)
       setFlashMessage({
@@ -30,38 +31,32 @@ const Register: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMess
       const response: AxiosResponse = await axios.post('/register', { firstName, lastName, email, password, passwordConfirm })
       if (response.status === HttpStatusCode.Created && response.data) {
         userId = response.data.userId
-        email = response.data.email
       }
     } catch (error) {
+      if (isAxiosError(error) && (error.response as AxiosResponse).status === 409) {
+        setFlashMessage({
+          message: 'Email address is already registered',
+          type: 'error',
+          visible: true,
+        })
+      } else {
       httpError = handleHttpError(error, wrapperRef as RefObject<HTMLDivElement>, flashMessage, setFlashMessage, TokenType.Verify, navigate)
-      // if (isAxiosError(e)) {
-      //   error = e as AxiosError
-      //   consoleError(error)
-      //   setFlashMessage({
-      //     message: 'An error occured trying to register',
-      //     type: 'error',
-      //     visible: true,
-      //   })
-      // } else {
-      //   console.error("Error trying to register:\n", error)
-      //   setFlashMessage({
-      //     message: `Error trying to register:<br />${error}`,
-      //     type: 'error',
-      //     visible: true,
-      //   })
-      // }
+      }
     } finally {
       setLoading!(false)
     }
-    if (!httpError && userId && email) {
-      setFlashMessage({ ...flashMessage, visible: false })
+    if (!httpError && userId) {
+      hideFlashMessage(flashMessage, setFlashMessage)
       setTimeout(() => {
         setFlashMessage({
           message: 'Registration successful! Please check your inbox for an email verification link.',
           type: 'success',
           visible: true,
         })
-      }, 50)
+      }, 1000)
+      setTimeout(() => {
+        resetForm()
+      }, 1500)
     }
   }
 
@@ -70,6 +65,14 @@ const Register: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMess
       key.preventDefault()
       handleRegister()
     }
+  }
+
+  const resetForm = (): void => {
+    setFirstName('')
+    setLastName('')
+    setEmail('')
+    setPassword('')
+    setPasswordConfirm('')
   }
 
   return (
@@ -127,8 +130,8 @@ const Register: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMess
           onKeyDown={keyDownOnElement}
         />
         <div className="flex flex-row sm:items-start mt-4">
-          <CustomButton className="max-sm:flex-1/2 mr-0.5 sm:mr-1" type="button" onClick={() => navigate('/')}>&laquo; Cancel</CustomButton>
-          <CustomButton className="max-sm:flex-1/2 ml-0.5 sm:ml-1" type="button" onClick={handleRegister}>Register</CustomButton>
+          <DelayedLink wrapperRef={wrapperRef} linkType={LinkType.Button} className="max-sm:flex-1/2 mr-0.5 sm:mr-1" to="/">&laquo; Cancel</DelayedLink>
+          <CustomButton className="max-sm:flex-1/2 ml-0.5 sm:ml-1" onClick={handleRegister} size="large">Register</CustomButton>
         </div>
       </div>
     </Layout>
