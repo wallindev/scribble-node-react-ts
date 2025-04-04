@@ -6,12 +6,12 @@ import type { AxiosError, AxiosResponse } from 'axios'
 import Layout from './layout/Layout'
 import TextInput from './shared/TextInput'
 import CustomButton from './shared/CustomButton'
-import { LinkType, Mode } from '../types/general.types'
-import { consoleError, fadeOutAndNavigate, getUserId, localDateStr, selectElementText } from '../utils/functions'
-import { defaultRequestConfig, defaultUser } from '../utils/defaults'
-import { STANDARD_DELAY } from '../utils/constants'
-import type { IGlobal, Mode as TMode, TUser } from '../types/general.types'
 import DelayedLink from './shared/DelayedLink'
+import { LinkType, Mode, TokenType } from '../types/general.types'
+import { consoleError, fadeOutAndNavigate, getAuthHeader, getUserId, handleHttpError, localDateStr, selectElementText } from '../utils/functions'
+import { STANDARD_DELAY } from '../utils/constants'
+import { defaultUser } from '../utils/defaults'
+import type { IGlobal, Mode as TMode, TUser } from '../types/general.types'
 
 const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
   const [searchParams, _setSearchParams] = useSearchParams()
@@ -40,44 +40,43 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage,
     if (user.id) {
       !(async () => {
         setLoading!(true)
+        let httpError
         try {
-          const response: AxiosResponse = await axios.get(`/users/${user.id}`, defaultRequestConfig)
+          const response: AxiosResponse = await axios.get(`/users/${user.id}`, getAuthHeader())
           if (response.status === HttpStatusCode.Ok && response.data) {
             // console.log('response.data:', response.data)
             setUser(response.data)
           }
         } catch (error) {
-          if (isAxiosError(error))  {
-            const axiosError = error as AxiosError
-            consoleError(axiosError)
-            switch (axiosError.status) {
-              case HttpStatusCode.NotFound:
-                setFlashMessage({
-                  message: 'User not found',
-                  type: 'error',
-                  visible: true,
-                })
-                break
-              default:
-                setFlashMessage({
-                  message: 'Something unexpected happened.',
-                  type: 'error',
-                  visible: true,
-                })
-            }
-          } else {
-            console.error(`Error fetching user:\n${error}`)
-            setFlashMessage({
-              message: `Error fetching user:<br />${error}`,
-              type: 'error',
-              visible: true,
-            })
-          }
+          httpError = handleHttpError(error, wrapperRef as RefObject<HTMLDivElement>, flashMessage, setFlashMessage, TokenType.Auth, navigate)
+          // if (isAxiosError(error))  {
+          //   const axiosError = error as AxiosError
+          //   consoleError(axiosError)
+          //   switch (axiosError.status) {
+          //     case HttpStatusCode.NotFound:
+          //       setFlashMessage({
+          //         message: 'User not found',
+          //         type: 'error',
+          //         visible: true,
+          //       })
+          //       break
+          //     default:
+          //       setFlashMessage({
+          //         message: 'Something unexpected happened.',
+          //         type: 'error',
+          //         visible: true,
+          //       })
+          //   }
+          // } else {
+          //   console.error(`Error fetching user:\n${error}`)
+          //   setFlashMessage({
+          //     message: `Error fetching user:<br />${error}`,
+          //     type: 'error',
+          //     visible: true,
+          //   })
+          // }
         } finally {
-          // To mock slow network
-          // setTimeout(() => {
-            setLoading!(false)
-          // }, 5000)
+          setLoading!(false)
         }
       })()
     }
@@ -104,7 +103,7 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage,
   const updateUser = async (usr: Partial<TUser>) => {
     let error
     try {
-      const response: AxiosResponse = await axios.patch(`/users/${usr.id}`, usr, defaultRequestConfig)
+      const response: AxiosResponse = await axios.patch(`/users/${usr.id}`, usr, getAuthHeader())
       if (response.status === HttpStatusCode.Ok && response.data) {
         setUser(response.data)
       }
