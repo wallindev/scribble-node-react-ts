@@ -27,29 +27,12 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme, flashMessage, setFlashMe
     try {
       const response: AxiosResponse = await axios.post('/login', { email, password })
       if (response.status === HttpStatusCode.Ok && response.data) {
-        const { userId, email, authToken, issued, expires } = response.data
-        if (!userId || !email || !authToken || !issued || !expires) throw new Error("Missing Response data content")
-        tokenData = JSON.stringify({ userId, email, authToken, issued, expires })
+        const { userId, email, issued, expires, authToken } = response.data
+        if (!userId || !email || !issued || !expires || !authToken) throw new Error("Missing Response data content")
+        tokenData = JSON.stringify({ userId, email, issued, expires, authToken })
       }
     } catch (error) {
       httpError = handleHttpError(error, wrapperRef as RefObject<HTMLDivElement>, flashMessage, setFlashMessage, TokenType.Auth, navigate)
-      // if (isAxiosError(error))  {
-      //   httpError = error as AxiosError
-      //   consoleError(httpError)
-      //   setFlashMessage({
-      //     message: 'An error occured trying to log in',
-      //     type: 'error',
-      //     visible: true,
-      //   })
-      // } else {
-      //   httpError = error as Error
-      //   console.error("Error trying to log in:", error)
-      //   setFlashMessage({
-      //     message: `Error trying to log in: ${error}`,
-      //     type: 'error',
-      //     visible: true,
-      //   })
-      // }
     }
     if (!httpError && tokenData) {
       setFlashMessage({
