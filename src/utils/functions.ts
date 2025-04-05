@@ -1,7 +1,7 @@
 import /* axios,  */{ isAxiosError } from 'axios'
 import type { Dispatch, RefObject, SetStateAction } from 'react'
 import type { NavigateFunction } from 'react-router-dom'
-import type { AxiosError/* , AxiosRequestConfig */, AxiosResponse } from 'axios'
+import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { TokenType } from '../types/general.types'
 import type { TFlashMessage } from '../types/general.types'
 import { FADE_OUT_TIME, STANDARD_DELAY } from './constants'
@@ -18,6 +18,10 @@ import { FADE_OUT_TIME, STANDARD_DELAY } from './constants'
  * Functions
  *
  */
+
+export const hideFlashMessage = (flashMessage: TFlashMessage, setFlashMessage: Dispatch<SetStateAction<TFlashMessage>>): void => {
+  setFlashMessage({ ...flashMessage, message: '', visible: false })
+}
 
 // Fade out page, and optionally navigate and remove flash message
 export const fadeOutAndNavigate = (wrapperRef: RefObject<HTMLDivElement>, navPath?: string, navigate?: NavigateFunction, navDelay?: number, flashMessage?: TFlashMessage, setFlashMessage?: Dispatch<SetStateAction<TFlashMessage>>): void => {
@@ -45,7 +49,7 @@ export const fadeOutAndNavigate = (wrapperRef: RefObject<HTMLDivElement>, navPat
   if (flashMessage && setFlashMessage) {
     setTimeout(() => {
       // console.log('hide flash message')
-      setFlashMessage({ ...flashMessage, message: '', visible: false })
+      hideFlashMessage(flashMessage, setFlashMessage)
     }, navDelay ? navDelay - FADE_OUT_TIME : 0)
   }
 }
@@ -97,6 +101,26 @@ export const getUserEmail = (): string | null => {
 
 export const hasUserEmail = (): boolean => getUserEmail() !== null
 
+export const getIssued = (): string | null => {
+  const tokenData = getTokenData()
+  if (!tokenData) return null
+  const tokenDataJson = JSON.parse(tokenData)
+  if (!tokenDataJson.issued) return null
+  return tokenDataJson.issued
+}
+
+export const hasIssued = (): boolean => getIssued() !== null
+
+export const getExpires = (): string | null => {
+  const tokenData = getTokenData()
+  if (!tokenData) return null
+  const tokenDataJson = JSON.parse(tokenData)
+  if (!tokenDataJson.expires) return null
+  return tokenDataJson.expires
+}
+
+export const hasExpires = (): boolean => getExpires() !== null
+
 export const getAuthToken = (): string | null => {
   const tokenData = getTokenData()
   if (!tokenData) return null
@@ -115,9 +139,17 @@ export const authTokenValid = (): boolean => {
   return Date.now() <= tokenTimestamp
 }
 
+export const getAuthHeader = (): AxiosRequestConfig => {
+  return {
+    headers: {
+      Authorization: `Bearer ${getAuthToken()}`
+    }
+  }
+}
+
 // Helper function to check authentication status
 // TODO: Change this to server-only cookie
-// export const isAuthenticated = (setAuth: Dispatch<SetStateAction<boolean>>, defaultRequestConfig?: AxiosRequestConfig | {}): boolean | void => {
+// export const isAuthenticated = (setAuth: Dispatch<SetStateAction<boolean>>, getAuthHeader()?: AxiosRequestConfig | {}): boolean | void => {
 export const isAuthenticated = (): boolean => {
   return hasUserId() && hasAuthToken() && authTokenValid()
   /*
@@ -134,10 +166,10 @@ export const isAuthenticated = (): boolean => {
    * Server authentication
    *
    */
-  /* // console.log('defaultRequestConfig:', defaultRequestConfig)
-  if (!defaultRequestConfig) setAuth(false)
+  /* // console.log('getAuthHeader():', getAuthHeader())
+  if (!getAuthHeader()) setAuth(false)
 
-  axios.get('/token', defaultRequestConfig)
+  axios.get('/token', getAuthHeader())
   .then(res => {
     // console.log('response:', res)
     if (!res.data?.authenticated) setAuth(false)
@@ -179,7 +211,7 @@ export const handleHttpError = (error: any, wrapperRef?: RefObject<HTMLDivElemen
             fadeOutAndNavigate(wrapperRef as RefObject<HTMLDivElement>, '/', navigate, STANDARD_DELAY, flashMessage, setFlashMessage)
             setTimeout(() => {
               logout()
-              if (flashMessage) setFlashMessage({ ...flashMessage, visible: false })
+              if (flashMessage) hideFlashMessage(flashMessage, setFlashMessage)
               if (navigate) navigate('/')
             }, STANDARD_DELAY)
           }
