@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import type { FC, JSX } from 'react'
 import CustomButton from './CustomButton'
 import type { IFlashMessage } from '../../types/general.types'
-import { scrollSmoothlyToTop } from '../../utils/functions'
+import { hideFlashMessage, scrollSmoothlyToTop } from '../../utils/functions'
 import { defaultColors } from '../../utils/defaults'
 
 const FlashMessage: FC<IFlashMessage> = ({ flashMessage, setFlashMessage }): JSX.Element => {
@@ -40,7 +40,7 @@ const FlashMessage: FC<IFlashMessage> = ({ flashMessage, setFlashMessage }): JSX
   return (
     <div ref={messageWrapperRef} className={`flex h-0 mb-0 p-1 justify-between items-center rounded-sm transition-all delay-0 duration-500 opacity-0 ${defaultColors[type]}`}>
       <div className="text-gray-100 bg-transparent text-sm" dangerouslySetInnerHTML={{ __html: message }} />
-      <CustomButton onClick={() => setFlashMessage({ ...flashMessage, visible: false })} size="small">×</CustomButton>
+      <CustomButton onClick={() => hideFlashMessage(flashMessage, setFlashMessage)} size="small">×</CustomButton>
     </div>
   )
 }
