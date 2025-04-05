@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
 import CustomButton from './CustomButton'
 import { fadeOutAndNavigate, logout } from '../../utils/functions'
-import { FADE_OUT_TIME, STANDARD_DELAY } from '../../utils/constants'
+import { STANDARD_DELAY } from '../../utils/constants'
 import type { ILogout } from '../../types/form.types'
 
 const Logout: FC<ILogout> = ({  wrapperRef, flashMessage, setFlashMessage, className, size = 'large', ...props }): JSX.Element => {
