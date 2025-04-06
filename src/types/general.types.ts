@@ -41,14 +41,16 @@ export enum MessageType {
   Success = 'success',
   Info = 'info',
   Warning = 'warning',
-  Error = 'error'
+  Error = 'error',
+  Reset = 'reset'
 }
 
 export enum Color {
   Green = 'bg-green-700',
   Blue = 'bg-blue-700',
   Yellow = 'bg-yellow-700',
-  Red = 'bg-red-700'
+  Red = 'bg-red-700',
+  Reset =  'bg-transparent'
 }
 
 /*
