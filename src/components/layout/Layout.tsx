@@ -7,6 +7,7 @@ import FlashMessage from '../shared/FlashMessage'
 import Footer from '../shared/Footer'
 import { Theme } from '../../types/general.types'
 import type { ILayout } from '../../types/general.types'
+import { hideFlashMessage } from '../../utils/functions'
 
 const Layout: FC<ILayout> = ({ /* loading,  */theme, setTheme, flashMessage, setFlashMessage, wrapperRef, children }): JSX.Element => {
   const [searchParams, _setSearchParams] = useSearchParams()
@@ -15,6 +16,8 @@ const Layout: FC<ILayout> = ({ /* loading,  */theme, setTheme, flashMessage, set
   // Fade-in effect on route change (together with CSS transition)
   // console.log('searchParams:', searchParams)
   useEffect(() => {
+    // Remove flash message on every reload
+    hideFlashMessage(flashMessage, setFlashMessage)
     // console.log('useEffect in Layout fired')
     const fadeInTimer = setTimeout(() => {
       // console.log('show wrapper/page')
