@@ -272,7 +272,7 @@ api.post('/register', async (req, res) => {
       return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid user data' })
 
     try {
-      const verifyToken = await generateToken({ userId, email }, 'verify', { expiresIn: '10m' })
+      const verifyToken = await generateToken({ userId, email }, 'verify', { expiresIn: '20m' })
       await sendVerifyEmail(email, verifyToken, hostUrl)
       res.status(HttpStatusCode.Ok).json({ userId, email })
     } catch (error) {
@@ -312,7 +312,7 @@ api.post('/register', async (req, res) => {
 
     // Insert into db and return to client
     try {
-      const verifyToken = await generateToken({ userId: newId, email }, 'verify', { expiresIn: '10m' })
+      const verifyToken = await generateToken({ userId: newId, email }, 'verify', { expiresIn: '20m' })
       // console.log('verifyToken:', verifyToken)
       // console.log('hostUrl:', hostUrl)
       console.time('sendMail')
@@ -365,7 +365,7 @@ api.get('/verify', async (req, res) => {
 
   const userId = db.data.users[usersIndex].id
   const email = db.data.users[usersIndex].email
-  const authToken = await generateToken({ userId, email }, 'auth', { expiresIn: '10m' })
+  const authToken = await generateToken({ userId, email }, 'auth', { expiresIn: '20m' })
   const tokenData = readToken(authToken)
   console.log('token data:', tokenData)
 
@@ -402,7 +402,7 @@ api.post('/login', async (req, res) => {
   // })
 
   const userId = user.id
-  const authToken = await generateToken({ userId, email }, 'auth', { expiresIn: '10m' })
+  const authToken = await generateToken({ userId, email }, 'auth', { expiresIn: '20m' })
   const tokenData = readToken(authToken)
 
   if (!tokenData || !tokenData?.userId || !tokenData?.email || !tokenData?.iat || !tokenData?.exp)
