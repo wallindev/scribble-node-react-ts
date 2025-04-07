@@ -8,7 +8,7 @@ import CustomButton from './shared/CustomButton'
 import DelayedLink from './shared/DelayedLink'
 import { LinkType, Mode } from '../types/general.types'
 import { consoleError, fadeOutAndNavigate, getAuthHeader, getUserId, localDateStr, replaceNewlinesWithBr, selectElementText, setElementText } from '../utils/functions'
-import { STANDARD_DELAY } from '../utils/constants'
+import { NAVIGATE_DELAY } from '../utils/constants'
 import { defaultArticle, defaultContentText, defaultTitleText } from '../utils/defaults'
 import type { IGlobal, Mode as TMode, TArticle } from '../types/general.types'
 
@@ -134,7 +134,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessa
         visible: true,
       })
       // Initiate fade-out effect on wrapper div
-      fadeOutAndNavigate(wrapperRef as RefObject<HTMLDivElement>, '/profile', navigate, STANDARD_DELAY, flashMessage, setFlashMessage)
+      fadeOutAndNavigate(wrapperRef as RefObject<HTMLDivElement>, '/profile', navigate, NAVIGATE_DELAY, flashMessage, setFlashMessage)
     }
   }
 
@@ -177,7 +177,7 @@ const Article: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessa
       })
       setTimeout(() => {
         navigate(`/articles/${newArticleId}`)
-      }, STANDARD_DELAY)
+      }, NAVIGATE_DELAY)
       // console.log(articleMode)
       // TODO: is this needed?
       // Change mode to Show
