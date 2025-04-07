@@ -9,8 +9,50 @@
 }
 
 @theme {
-  /* Mycolor.space   */
-  /* Purple?         */
+  /* Defaults for some font settings */
+  --font-sans: Roboto, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --tw-leading: 1;
+  --text-xs--line-height: 1;
+  --text-sm--line-height: 1;
+  --text-md--line-height: 1;
+  --text-xl--line-height: 1;
+  --text-2xl--line-height: 1;
+
+  /* Defaults for transitions */
+  --tw-delay: 0;
+  --default-transition-delay: var(--tw-delay);
+  --tw-duration: 1000;
+  --default-transition-duration: var(--tw-duration);
+
+  /* The Rainbow (+ Pink, Purple, and Gray) according to standard CSS =) */
+  --color-red: #ff0000;
+  --color-orange: #ffa500;
+  --color-yellow: #ffff00;
+  --color-green: #008000;
+  --color-blue: #0000ff;
+  --color-indigo: #4b0082;
+  --color-violet: #ee82ee;
+  --color-pink: #ffc0cb;
+  --color-purple: #800080;
+  --color-gray: #808080;
+
+  /*
+   * Mycolor.space
+   *
+   */
+
+  /* Red */
+  --color-1: #760000;
+  --color-2: #860000;
+  --color-3: #960000;
+  --color-4: #9c0000;
+  --color-5: #b80000;
+  --color-6: #db0000;
+  --color-7: #f50000;
+  --color-8: #ff0000;
+  --color-9: #ff5159;
+
+  /* Purple */
   --color-1: #1f0660;
   --color-2: #7652b4;
   --color-3: #845EC2;
@@ -20,47 +62,29 @@
   --color-7: #f3c5ff;
   --color-8: #faccff;
   --color-9: #ffe4ff;
-  /*                 */
 
-  /* The Rainbow =) */
-  --color-red: #ff0000;
-  --color-orange: #ffa500;
-  --color-yellow: #ffff00;
-  --color-green: #008000;
-  --color-blue: #0000ff;
-  --color-indigo: #4b0082;
-  --color-violet: #ee82ee;
-
-  --font-sans: Roboto, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-  --tw-leading: 1;
-  --text-xs--line-height: 1;
-  --text-sm--line-height: 1;
-  --text-md--line-height: 1;
-  --text-xl--line-height: 1;
-  --text-2xl--line-height: 1;
+  /* Old color variables */
+  /* --color-text_org: #ffffffde;
+  --color-text-hover_org: #2563eb;
+  --color-page-bg_old: #18181a;
+  --color-content-bg_old: #242424;
+  --color-main-content-bg_old: #212121; */
 
   /* Theme base colors */
-  --color-text: #ecececec;
-  --color-text_org: #ffffffde;
-  --color-text-hover: #b4b4b4b4;
-  --color-text-hover_org: #2563eb;
-  --color-link: #007bff;
-  --color-link-hover: #0056b3;
-  --color-page-bg: #0f0f0f;
-  --color-page-bg_old: #18181a;
-  --color-content-bg: #1a1a1a;
-  --color-content-bg_old: #242424;
-  --color-main-content-bg: #242424;
-  --color-main-content-bg_old: #212121;
-  --color-input-bg: #f0f0f0;
-  --color-input-text: #0f0f0f;
-  --color-button-bg: #007bff;
-  --color-button-bg-hover: #0056b3;
-  --color-button-outline: #007bff;
-  --color-button-text: #f0f0f0;
-
-  --tw-duration: 1000;
-  --default-transition-duration: 1000;
+    --color-body-bg: #0f0f0f;
+    --color-text: #ecececec;
+    --color-text-hover: #b4b4b4b4;
+    --color-link: #007bff;
+    --color-link-hover: #0056b3;
+    --color-page-bg: #0f0f0f;
+    --color-content-bg: #1a1a1a;
+    --color-main-content-bg: #242424;
+    --color-input-bg: #f0f0f0;
+    --color-input-text: #0f0f0f;
+    --color-button-bg: #007bff;
+    --color-button-bg-hover: #0056b3;
+    --color-button-outline: #007bff;
+    --color-button-text: #f0f0f0;
 }
 
 @layer base {
@@ -83,16 +107,16 @@
   [data-theme='Red'] {
     --color-text: #ecececec;
     --color-text-hover: #b4b4b4b4;
-    --color-link: #dc143c;
-    --color-link-hover: #ea143c;
-    --color-page-bg: #8b0000;
-    --color-content-bg: #a52a2a;
-    --color-main-content-bg: #b22222;
+    --color-link: #ff0000;
+    --color-link-hover: #db0000;
+    --color-page-bg: #760000;
+    --color-content-bg: #860000;
+    --color-main-content-bg: #960000;
     --color-input-bg: #f0f0f0;
-    --color-input-text: #0f0f0f;
-    --color-button-bg: #dc143c;
-    --color-button-bg-hover: #ea143c;
-    --color-button-outline: #dc143c;
+    --color-input-text: #760000;
+    --color-button-bg: #ff0000;
+    --color-button-bg-hover: #db0000;
+    --color-button-outline: #ff0000;
     --color-button-text: #f0f0f0;
 
     --color-primary: #8b0000;
