@@ -2,7 +2,7 @@ import /* axios,  */{ isAxiosError } from 'axios'
 import type { Dispatch, RefObject, SetStateAction } from 'react'
 import type { NavigateFunction } from 'react-router-dom'
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
-import { TokenType } from '../types/general.types'
+import { MessageType, TokenType } from '../types/general.types'
 import type { TFlashMessage } from '../types/general.types'
 import { FADE_OUT_TIME, STANDARD_DELAY } from './constants'
 
@@ -20,7 +20,7 @@ import { FADE_OUT_TIME, STANDARD_DELAY } from './constants'
  */
 
 export const hideFlashMessage = (flashMessage: TFlashMessage, setFlashMessage: Dispatch<SetStateAction<TFlashMessage>>): void => {
-  setFlashMessage({ ...flashMessage, message: '', visible: false })
+  setFlashMessage({ ...flashMessage, message: '', type: MessageType.Reset, visible: false })
 }
 
 // Fade out page, and optionally navigate and remove flash message
