@@ -18,7 +18,8 @@ export const defaultColors: TColor = {
   success: Color.Green,
   info: Color.Blue,
   warning: Color.Yellow,
-  error: Color.Red
+  error: Color.Red,
+  reset: Color.Reset
 }
 
 export const defaultArticle: TArticle = {
@@ -44,6 +45,6 @@ export const defaultUser: TUser = {
 
 export const defaultFlashMessage: TFlashMessage = {
   message: '',
-  type: MessageType.Success,
+  type: MessageType.Reset,
   visible: false
 }
