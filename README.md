@@ -7,7 +7,17 @@ Created with Vite, but later decoupled so that Vite now only runs the developmen
 
 In the project directory, you can run:
 
+### `npm run api-dev`
+
+Runs the app in development mode, with the Express server in the backend and the React SPA with HMR (Hot Module Reloading) in the frontend.<br>
+[http://localhost:3000](http://localhost:3000) opens the Express API.
+[http://localhost:5000](http://localhost:5000) opens the React SPA.
+
+### `npm run build`
+
+Builds the app to the 'dist' folder, the TypeScript is transpiled to Javascript and Vite bundles all assets.
+
 ### `npm start`
 
-Runs the app in the development mode.<br>
+Starts the built app, with the Express backend that serves the API and the transpiled frontend React SPA.<br>
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
