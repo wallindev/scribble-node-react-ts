@@ -8,7 +8,7 @@ import CustomButton from './shared/CustomButton'
 import DelayedLink from './shared/DelayedLink'
 import { LinkType, TokenType } from '../types/general.types'
 import { consoleError, getAuthHeader, handleHttpError, hideFlashMessage } from '../utils/functions'
-import { STANDARD_DELAY } from '../utils/constants'
+import { NAVIGATE_DELAY } from '../utils/constants'
 import type { TArticle, IGlobal } from '../types/general.types'
 
 const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
@@ -72,7 +72,7 @@ const Articles: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMess
         setTimeout(() => {
           hideFlashMessage(flashMessage, setFlashMessage)
           // setLoading!(false)
-        }, STANDARD_DELAY)
+        }, NAVIGATE_DELAY)
       }
     }
   }
