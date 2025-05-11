@@ -9,7 +9,7 @@ import DelayedLink from './shared/DelayedLink'
 import CustomButton from './shared/CustomButton'
 import { LinkType, TokenType } from '../types/general.types'
 import { fadeOutAndNavigate, handleHttpError, login } from '../utils/functions'
-import { STANDARD_DELAY } from '../utils/constants'
+import { NAVIGATE_DELAY } from '../utils/constants'
 import type { IGlobal } from '../types/general.types'
 
 const Login: FC<IGlobal> = ({ loading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
@@ -41,10 +41,10 @@ const Login: FC<IGlobal> = ({ loading, theme, setTheme, flashMessage, setFlashMe
         visible: true,
       })
       // Initiate fade-out effect on wrapper div
-      fadeOutAndNavigate(wrapperRef as RefObject<HTMLDivElement>, '/home', navigate, STANDARD_DELAY, flashMessage, setFlashMessage)
+      fadeOutAndNavigate(wrapperRef as RefObject<HTMLDivElement>, '/home', navigate, NAVIGATE_DELAY, flashMessage, setFlashMessage)
       setTimeout(() => {
         login(tokenData)
-      }, STANDARD_DELAY - 500)
+      }, NAVIGATE_DELAY - 500)
     }
   }
 
