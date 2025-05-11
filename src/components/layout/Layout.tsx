@@ -8,6 +8,7 @@ import Footer from '../shared/Footer'
 import { Theme } from '../../types/general.types'
 import type { ILayout } from '../../types/general.types'
 import { hideFlashMessage } from '../../utils/functions'
+import { TRANSITION_DURATION } from '../../utils/constants'
 
 const Layout: FC<ILayout> = ({ /* loading,  */theme, setTheme, flashMessage, setFlashMessage, wrapperRef, children }): JSX.Element => {
   const [searchParams, _setSearchParams] = useSearchParams()
@@ -31,12 +32,12 @@ const Layout: FC<ILayout> = ({ /* loading,  */theme, setTheme, flashMessage, set
   }, [searchParams])
 
   return /* loading ? <LoadText /> : */ (
-    <div ref={wrapperRef} className={`transition-all delay-0 duration-1000 opacity-0`} onClick={() => setSubNavOpen!(false)} data-theme={Theme[theme!]}>
-      <div className="m-0 sm:mx-auto p-2 sm:p-4 w-screen sm:max-w-160 max-sm:h-screen flex flex-col bg-content-bg rounded-xl">
+    <div ref={wrapperRef} className={`transition-all duration-${TRANSITION_DURATION} opacity-0 bg-page-bg text-text h-screen`} onClick={() => setSubNavOpen!(false)} data-theme={Theme[theme]}>
+      <div className={`flex flex-col bg-content-bg rounded-xl transition-colors duration-${TRANSITION_DURATION} m-0 p-2 w-screen max-sm:h-screen sm:mx-auto sm:p-4 sm:max-w-160`}>
         <header>
           <MainNav wrapperRef={wrapperRef} flashMessage={flashMessage} setFlashMessage={setFlashMessage} subNavOpen={subNavOpen} setSubNavOpen={setSubNavOpen} />
         </header>
-        <main className="outline-0 flex-1 p-4 sm:p-4 bg-main-content-bg rounded-xl overflow-y-auto">
+        <main className={`transition-colors duration-${TRANSITION_DURATION} outline-0 flex-1 p-4 sm:p-4 bg-main-content-bg rounded-xl overflow-y-auto`}>
           <FlashMessage flashMessage={flashMessage} setFlashMessage={setFlashMessage} />
           {children}
         </main>
