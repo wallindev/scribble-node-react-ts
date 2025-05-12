@@ -9,7 +9,7 @@ import CustomButton from './shared/CustomButton'
 import DelayedLink from './shared/DelayedLink'
 import { LinkType, Mode, TokenType } from '../types/general.types'
 import { consoleError, fadeOutAndNavigate, getAuthHeader, getUserId, handleHttpError, localDateStr, selectElementText } from '../utils/functions'
-import { STANDARD_DELAY } from '../utils/constants'
+import { NAVIGATE_DELAY } from '../utils/constants'
 import { defaultUser } from '../utils/defaults'
 import type { IGlobal, Mode as TMode, TUser } from '../types/general.types'
 
@@ -133,7 +133,7 @@ const User: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage,
         visible: true,
       })
       // Initiate fade-out effect on wrapper div
-      fadeOutAndNavigate(wrapperRef as RefObject<HTMLDivElement>, '/profile', navigate, STANDARD_DELAY, flashMessage, setFlashMessage)
+      fadeOutAndNavigate(wrapperRef as RefObject<HTMLDivElement>, '/profile', navigate, NAVIGATE_DELAY, flashMessage, setFlashMessage)
     }
   }
 
