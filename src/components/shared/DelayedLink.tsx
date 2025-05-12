@@ -19,7 +19,7 @@ const DelayedLink: FC<IDelayedLink> = ({ wrapperRef, linkType = LinkType.Nav, de
   useEffect(() => {
     if (linkType === LinkType.Nav && navLinkRef.current) {
       const curNavLink = navLinkRef.current as HTMLAnchorElement
-      curNavLink.classList.add('hover:text-text-hover', 'focus-visible:text-text-hover', 'transition-colors', 'duration-300')
+      curNavLink.classList.add('transition-colors', 'hover:text-text-hover', 'focus-visible:text-text-hover', 'hover:duration-300', 'focus-visible:duration-300')
 
       if (curNavLink.classList.contains('active')) curNavLink.classList.add('font-bold', 'pointer-events-none', 'select-none')
     }
