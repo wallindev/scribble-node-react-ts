@@ -4,6 +4,7 @@ import DelayedLink from './DelayedLink'
 import Logout from './Logout'
 import type { IMainNav } from '../../types/general.types'
 import { isAuthenticated } from '../../utils/functions'
+import { TRANSITION_DURATION } from '../../utils/constants'
 
 const MainNav: FC<IMainNav> = ({ wrapperRef,  flashMessage, setFlashMessage, subNavOpen, setSubNavOpen }): JSX.Element => {
   const toggleMenu = (e: MouseEvent<HTMLDivElement>): void => {
@@ -12,10 +13,10 @@ const MainNav: FC<IMainNav> = ({ wrapperRef,  flashMessage, setFlashMessage, sub
   }
 
   const burgerLinesUtilClasses = 'w-6 h-0.5 bg-white mx-0 my-1'
-  const linkUtilClasses = 'block border border-t-0 border-main-content-bg px-6 py-4 sm:border-0 sm:inline-block sm:px-1 sm:py-2'
+  const linkUtilClasses = `transition-colors duration-${TRANSITION_DURATION} block border border-t-0 border-main-content-bg px-6 py-4 sm:border-0 sm:inline-block sm:px-1 sm:py-2`
 
   return (
-    <nav className="mb-2 sm:mb-4 p-4 sm:border-b border-main-content-bg">
+    <nav className={`transition-colors duration-${TRANSITION_DURATION} mb-2 sm:mb-4 p-4 sm:border-b border-main-content-bg`}>
       <div className="flex justify-between items-center">
         <div className="text-xl font-bold">
           <DelayedLink wrapperRef={wrapperRef} to="/" title="To Start Page">Scribble!</DelayedLink>
@@ -26,7 +27,7 @@ const MainNav: FC<IMainNav> = ({ wrapperRef,  flashMessage, setFlashMessage, sub
             <div className={burgerLinesUtilClasses}></div>
             <div className={burgerLinesUtilClasses}></div>
           </div>
-          <ul className={`${subNavOpen ? 'flex flex-col' : 'hidden'} sm:hidden list-none w-full absolute top-16 left-0 bg-content-bg opacity-95`}>
+          <ul className={`${subNavOpen ? 'flex flex-col' : 'hidden'} transition-colors duration-${TRANSITION_DURATION} sm:hidden list-none w-full absolute top-16 left-0 bg-content-bg opacity-95`}>
             <li><DelayedLink wrapperRef={wrapperRef} to="/home" className={linkUtilClasses.replace('border-t-0', '')} title="To Home My Page">Home</DelayedLink></li>
             <li><DelayedLink wrapperRef={wrapperRef} to="/articles" className={linkUtilClasses} title="To My Articles Page">My Articles</DelayedLink></li>
             <li><DelayedLink wrapperRef={wrapperRef} to="/profile" className={linkUtilClasses} title="To My Profile Page">My Profile</DelayedLink></li>
