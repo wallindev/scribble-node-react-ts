@@ -7,7 +7,7 @@ import Layout from './layout/Layout'
 import TextLink from './shared/TextLink'
 import { TokenType } from '../types/general.types'
 import { fadeOutAndNavigate, getUserEmail, getUserId, handleHttpError, hideFlashMessage, login } from '../utils/functions'
-import { STANDARD_DELAY } from '../utils/constants'
+import { NAVIGATE_DELAY } from '../utils/constants'
 import type { IGlobal } from '../types/general.types'
 
 const Verify: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessage, setFlashMessage, wrapperRef }): JSX.Element => {
@@ -46,11 +46,11 @@ const Verify: FC<IGlobal> = ({ loading, setLoading, theme, setTheme, flashMessag
               type: 'success',
               visible: true,
             })
-          }, STANDARD_DELAY)
-          fadeOutAndNavigate(wrapperRef as RefObject<HTMLDivElement>, '/home', navigate, STANDARD_DELAY * 2, flashMessage, setFlashMessage)
+          }, NAVIGATE_DELAY)
+          fadeOutAndNavigate(wrapperRef as RefObject<HTMLDivElement>, '/home', navigate, NAVIGATE_DELAY * 2, flashMessage, setFlashMessage)
           setTimeout(() => {
             login(tokenData)
-          }, STANDARD_DELAY * 2 - 500)
+          }, NAVIGATE_DELAY * 2 - 500)
         }
       })()
     }
