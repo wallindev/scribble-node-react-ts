@@ -61,12 +61,6 @@ export enum Color {
 export type TColor = {
   [key: string]: string
 }
-// export type TColor = {
-//   success: string
-//   info: string
-//   warning: string
-//   error: string
-// }
 
 export type TArticle = {
   id?: number | null
@@ -129,13 +123,6 @@ export interface IGlobal {
 }
 
 export interface ILayout extends IGlobal {
-  theme: Theme
-  setTheme: Dispatch<SetStateAction<Theme>>
-  loading: boolean
-  setLoading?: Dispatch<SetStateAction<boolean>>
-  flashMessage: TFlashMessage
-  setFlashMessage: Dispatch<SetStateAction<TFlashMessage>>
-  wrapperRef: RefObject<HTMLDivElement | null>
   children: ReactNode
 }
 
@@ -151,7 +138,6 @@ export interface IDelayedLink {
   className?: string
   buttonType?: 'button' | 'submit' | 'reset'
   onClick?: MouseEventHandler<HTMLButtonElement>
-  // onClick?: () => void
   size?: 'small' | 'medium' | 'large'
   style?: CSSProperties
   to: To
