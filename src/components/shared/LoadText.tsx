@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FC, JSX } from 'react'
 import type { ILoadText } from '../../types/general.types'
+import { TRANSITION_DURATION } from '../../utils/constants'
 
 const LoadText: FC<ILoadText> = ({ defaultText = 'Loading' }): JSX.Element => {
   const displayTexts = {
@@ -29,7 +30,7 @@ const LoadText: FC<ILoadText> = ({ defaultText = 'Loading' }): JSX.Element => {
   }, [])
 
   return (
-    <div ref={textRef} className="m-0 sm:mx-auto p-2 sm:p-4 w-screen sm:max-w-160 /* max-sm:*/ h-screen flex flex-col bg-content-bg rounded-xl transition-opacity delay-0 duration-800 opacity-0">
+    <div ref={textRef} className={`m-0 sm:mx-auto p-2 sm:p-4 w-screen sm:max-w-160 /* max-sm:*/ h-screen flex flex-col bg-content-bg rounded-xl transition-opacity duration-${TRANSITION_DURATION} opacity-0`}>
       {displayText}
     </div>
   )
