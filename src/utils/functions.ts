@@ -4,7 +4,7 @@ import type { NavigateFunction } from 'react-router-dom'
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { MessageType, TokenType } from '../types/general.types'
 import type { TFlashMessage } from '../types/general.types'
-import { FADE_OUT_TIME, STANDARD_DELAY } from './constants'
+import { FADE_OUT_TIME, NAVIGATE_DELAY } from './constants'
 
 // Example of JSDoc
 /**
@@ -208,12 +208,12 @@ export const handleHttpError = (error: any, wrapperRef?: RefObject<HTMLDivElemen
             visible: true,
           })
           if (tokenType === TokenType.Auth) {
-            fadeOutAndNavigate(wrapperRef as RefObject<HTMLDivElement>, '/', navigate, STANDARD_DELAY, flashMessage, setFlashMessage)
+            fadeOutAndNavigate(wrapperRef as RefObject<HTMLDivElement>, '/', navigate, NAVIGATE_DELAY, flashMessage, setFlashMessage)
             setTimeout(() => {
               logout()
               if (flashMessage) hideFlashMessage(flashMessage, setFlashMessage)
               if (navigate) navigate('/')
-            }, STANDARD_DELAY)
+            }, NAVIGATE_DELAY)
           }
         }
       } else if (nestedError.name === 'JsonWebTokenError') {
