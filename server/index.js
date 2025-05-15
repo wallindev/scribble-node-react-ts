@@ -384,13 +384,42 @@ api.get('/verify', async (req, res) => {
 // Log in user with email and password, and set/send auth token
 api.post('/login', async (req, res) => {
   const { email, password } = req.body
-  if (!email || !password) return res.status(HttpStatusCode.BadRequest).json({ message: 'Invalid user data' })
+  if (!email || !password) return res.status(HttpStatusCode.BadRequest).json({
+    error: {
+      code: `${HttpStatusCode.BadRequest}: Bad Request`,
+      message: 'Bad Request: Email or password missing or not valid',
+      messageUser: 'Email or password not valid',
+      name: 'CustomError'
+    }
+  })
   const user = db.data.users.find(u => u.email === email)
-  if (!user || !user.id) return res.status(HttpStatusCode.Unauthorized).json({ message: 'Invalid credentials' })
-  if (!user.emailVerified) return res.status(HttpStatusCode.Unauthorized).json({ message: 'Email not verified' })
+  // TODO: Why check user.id here?
+  if (!user || !user.id) return res.status(HttpStatusCode.Unauthorized).json({
+    error: {
+      code: `${HttpStatusCode.Unauthorized}: Unauthorized`,
+      message: 'Unauthorized: User not found (no matching email)',
+      messageUser: 'Wrong email or password',
+      name: 'CustomError'
+    }
+  })
+  if (!user.emailVerified) return res.status(HttpStatusCode.Unauthorized).json({
+    error: {
+      code: `${HttpStatusCode.Unauthorized}: Unauthorized`,
+      message: 'Unauthorized: Email not verified',
+      messageUser: 'Please verify your email before logging in',
+      name: 'CustomError'
+    }
+  })
 
   const passwordCompare = await comparePassword(password, user.password, user.salt)
-  if (!passwordCompare) return res.status(HttpStatusCode.Unauthorized).json({ message: 'Password compare failed' })
+  if (!passwordCompare) return res.status(HttpStatusCode.Unauthorized).json({
+    error: {
+      code: `${HttpStatusCode.Unauthorized}: Unauthorized`,
+      message: 'Unauthorized: Provided password doesn\'t match stored password',
+      messageUser: 'Wrong email or password',
+      name: 'CustomError'
+    }
+  })
 
   // Next step, to have a server cookie and handle all
   // authentication and authorization on the server
