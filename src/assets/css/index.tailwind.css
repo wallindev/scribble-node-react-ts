@@ -326,6 +326,16 @@
 }
 
 /**
+ * TODO: Do we have to set a default value (--tw-duration) for every utility class we use?
+ * Then what's the point of having a default value as a variable?
+ */
+@layer utilities {
+  .transition-colors {
+    --tw-duration: 1000;
+  }
+}
+
+/**
 * Tailwinds CSS Media Queries / Breakpoints
 *
 sm = 40rem = 640px
