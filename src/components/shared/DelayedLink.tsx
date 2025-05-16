@@ -7,6 +7,7 @@ import CustomButton from './CustomButton'
 import TextLink from './TextLink'
 import { FADE_OUT_TIME } from '../../utils/constants'
 import type { IDelayedLink } from '../../types/general.types'
+import { LINK_TRANSITION_DURATION } from '../../utils/constants'
 
 const DelayedLink: FC<IDelayedLink> = ({ wrapperRef, linkType = LinkType.Nav, delay = FADE_OUT_TIME, onClick, to, buttonType = 'button', children, className, size = 'large', style, ...props }): JSX.Element => {
   const navigate = useNavigate()
@@ -19,7 +20,7 @@ const DelayedLink: FC<IDelayedLink> = ({ wrapperRef, linkType = LinkType.Nav, de
   useEffect(() => {
     if (linkType === LinkType.Nav && navLinkRef.current) {
       const curNavLink = navLinkRef.current as HTMLAnchorElement
-      curNavLink.classList.add('transition-colors', 'hover:text-text-hover', 'focus-visible:text-text-hover', 'hover:duration-300', 'focus-visible:duration-300')
+      curNavLink.classList.add('transition-colors', `duration-${LINK_TRANSITION_DURATION}`, 'hover:text-text-hover', 'focus-visible:text-text-hover')
 
       if (curNavLink.classList.contains('active')) curNavLink.classList.add('font-bold', 'pointer-events-none', 'select-none')
     }
@@ -42,7 +43,7 @@ const DelayedLink: FC<IDelayedLink> = ({ wrapperRef, linkType = LinkType.Nav, de
     setTimeout(() => {
       const divWrapper = wrapperRef.current as HTMLDivElement
       divWrapper.classList.replace('opacity-100', 'opacity-0')
-    }, 100)
+    }, 10)
 
     // Navigate after the fade-out is finished
     setTimeout(() => {
