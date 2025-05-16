@@ -24,7 +24,7 @@ const Layout: FC<ILayout> = ({ /* loading,  */theme, setTheme, flashMessage, set
       // console.log('show wrapper/page')
       const divWrapper = wrapperRef.current as HTMLDivElement
       divWrapper.classList.replace('opacity-0', 'opacity-100')
-    }, 100)
+    }, 10)
 
     return () => {
       clearTimeout(fadeInTimer)
@@ -32,7 +32,7 @@ const Layout: FC<ILayout> = ({ /* loading,  */theme, setTheme, flashMessage, set
   }, [searchParams])
 
   return /* loading ? <LoadText /> : */ (
-    <div ref={wrapperRef} className={`transition-all duration-${TRANSITION_DURATION} opacity-0 bg-page-bg text-text h-screen`} onClick={() => setSubNavOpen!(false)} data-theme={Theme[theme]}>
+    <div ref={wrapperRef} className={`transition-all duration-800 opacity-0 bg-page-bg text-text h-screen`} onClick={() => setSubNavOpen!(false)} data-theme={Theme[theme]}>
       <div className={`flex flex-col bg-content-bg rounded-xl transition-colors duration-${TRANSITION_DURATION} m-0 p-2 w-screen max-sm:h-screen sm:mx-auto sm:p-4 sm:max-w-160`}>
         <header>
           <MainNav wrapperRef={wrapperRef} flashMessage={flashMessage} setFlashMessage={setFlashMessage} subNavOpen={subNavOpen} setSubNavOpen={setSubNavOpen} />
