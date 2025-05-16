@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 import type { FC, JSX } from 'react'
 import type { ICustomButton } from '../../types/form.types'
-import { TRANSITION_DURATION } from '../../utils/constants'
+import { LINK_TRANSITION_DURATION } from '../../utils/constants'
 
 const CustomButton: FC<ICustomButton> = ({ onClick, to, type = 'button', children, className, size = 'medium', ...props }): JSX.Element => {
-  let classNamesButton = `transition-colors duration-${TRANSITION_DURATION} inline-block outline-0 bg-button-bg text-button-text border-0 rounded-sm cursor-pointer hover:bg-button-bg-hover focus-visible:bg-button-bg-hover hover:duration-300 focus-visible:duration-300`
+  let classNamesButton = `transition-colors duration-${LINK_TRANSITION_DURATION} inline-block outline-0 bg-button-bg text-button-text border-0 rounded-sm cursor-pointer hover:bg-button-bg-hover focus-visible:bg-button-bg-hover`
   switch (size) {
     case 'small':
       classNamesButton = `${classNamesButton} leading-[1.2] p-1 px-2 text-xs`
