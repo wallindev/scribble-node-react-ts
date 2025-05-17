@@ -13,7 +13,7 @@ const MainNav: FC<IMainNav> = ({ wrapperRef,  flashMessage, setFlashMessage, sub
   }
 
   const burgerLinesUtilClasses = 'w-6 h-0.5 bg-white mx-0 my-1'
-  const linkUtilClasses = `transition-colors duration-${TRANSITION_DURATION} block border border-t-0 border-main-content-bg px-6 py-4 sm:border-0 sm:inline-block sm:px-1 sm:py-2`
+  const linkUtilClasses = `block border border-t-0 border-main-content-bg px-6 py-4 sm:border-0 sm:inline-block sm:px-1 sm:py-2`
 
   return (
     <nav className={`transition-colors duration-${TRANSITION_DURATION} mb-2 sm:mb-4 p-4 sm:border-b border-main-content-bg`}>
