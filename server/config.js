@@ -27,4 +27,4 @@ if (IS_LIVE) {
   envConfigVars['EMAIL_USER']    = process.env.EMAIL_USER    || 'mikael.wallin@yahoo.se'
   envConfigVars['EMAIL_PASS']    = process.env.EMAIL_PASS    || 'frtatntzqhooosbh'
   envConfigVars['PORT']          = process.env.PORT          || 3000
-  }
+}
