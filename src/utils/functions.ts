@@ -193,8 +193,6 @@ export const handleHttpError = (error: any, wrapperRef?: RefObject<HTMLDivElemen
     httpError = error as AxiosError
     const nestedError = (httpError.response as AxiosResponse)?.data?.error
     if (nestedError) {
-      console.log('nestedError.name:', nestedError.name)
-      console.log('nestedError.message:', nestedError.message)
       // console.log('nestedError.stack:', nestedError.stack)
       // console.error('nestedError:', nestedError)
       if (nestedError.name === 'TokenExpiredError') {
@@ -227,14 +225,30 @@ export const handleHttpError = (error: any, wrapperRef?: RefObject<HTMLDivElemen
           })
         }
       } else {
-        console.error('Unknown token error:', nestedError)
-        if (setFlashMessage) {
-          const unknownMsg = tokenType === TokenType.Auth ? 'Session unexpectedly ended. Try logging out and in again.' : 'Something went wrong during the email verification. Try re-sending the link.'
-          setFlashMessage({
-            message: unknownMsg,
-            type: 'warning',
-            visible: true,
-          })
+        if (nestedError.name === 'CustomError') {
+          // console.group('CustomError')
+          console.groupCollapsed('CustomError')
+          consoleError(nestedError.code)
+          consoleError(nestedError.message)
+          console.groupEnd()
+          // console.debug('CustomError:', nestedError)
+          if (setFlashMessage) {
+            setFlashMessage({
+              message: nestedError.messageUser,
+              type: 'error',
+              visible: true,
+            })
+          }
+        } else {
+          console.error('Unknown error:', nestedError)
+          if (setFlashMessage) {
+            const unknownMsg = tokenType === TokenType.Auth ? 'Session unexpectedly ended. Try logging out and in again.' : 'Something went wrong during the email verification. Try re-sending the link.'
+            setFlashMessage({
+              message: unknownMsg,
+              type: 'error',
+              visible: true,
+            })
+          }
         }
       }
     } else {
